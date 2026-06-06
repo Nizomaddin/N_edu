@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "app/main.py",
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "50mb" }
+    }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "app/main.py" }
+  ],
+  "env": {
+    "DATABASE_URL":          "@database_url",
+    "SUPABASE_URL":          "@supabase_url",
+    "SUPABASE_SERVICE_KEY":  "@supabase_service_key",
+    "SECRET_KEY":            "@secret_key"
+  }
+}
