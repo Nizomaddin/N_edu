@@ -12,17 +12,25 @@ if DATABASE_URL.startswith("postgres://"):
 elif DATABASE_URL.startswith("postgresql://") and "+asyncpg" not in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-
+# Supabase pgbouncer uchun - statement_cache_size=0 MAJBURIY
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
     connect_args={
         "ssl": "require",
         "statement_cache_size": 0,
+        "prepared_statement_cache_size": 0,
     },
+    pool_pre_ping=False,
+    pool_size=1,
+    max_overflow=0,
 )
 
-AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+AsyncSessionLocal = async_sessionmaker(
+    engine,
+    expire_on_commit=False,
+    class_=AsyncSession,
+)
 
 
 class Base(DeclarativeBase):
