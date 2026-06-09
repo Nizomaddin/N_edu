@@ -67,7 +67,7 @@ async def create_user(
     await conn.execute(
         "INSERT INTO users (id,fname,lname,login,password,role,subject,group_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
         uid, body["fname"], body["lname"], body["login"],
-        hash_password(body["password"]), body["role"],
+        body["password"], body["role"],
         body.get("subject",""), body.get("group_id")
     )
     row = await conn.fetchrow("SELECT * FROM users WHERE id=$1", uid)
@@ -86,7 +86,7 @@ async def bulk_create(
         if existing:
             await conn.execute(
                 "UPDATE users SET fname=$1,lname=$2,password=$3,subject=$4,group_id=$5 WHERE login=$6",
-                item["fname"], item["lname"], hash_password(item["password"]),
+                item["fname"], item["lname"], item["password"],
                 item.get("subject",""), item.get("group_id"), item["login"]
             )
             updated.append(item["login"])
@@ -95,7 +95,7 @@ async def bulk_create(
             await conn.execute(
                 "INSERT INTO users (id,fname,lname,login,password,role,subject,group_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
                 uid, item["fname"], item["lname"], item["login"],
-                hash_password(item["password"]), item["role"],
+                item["password"], item["role"],
                 item.get("subject",""), item.get("group_id")
             )
             added.append(item["login"])
@@ -127,7 +127,7 @@ async def update_user(
         if field in body:
             params.append(body[field]); sets.append(f"{field}=${len(params)}")
     if "password" in body:
-        params.append(hash_password(body["password"])); sets.append(f"password=${len(params)}")
+        params.append(body["password"]); sets.append(f"password=${len(params)}")
     if not sets: raise HTTPException(400, "Hech narsa o'zgartirilmadi")
     params.append(user_id)
     await conn.execute(f"UPDATE users SET {','.join(sets)} WHERE id=${len(params)}", *params)
