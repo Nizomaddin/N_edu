@@ -65,10 +65,10 @@ async def create_user(
     if dup: raise HTTPException(400, f"'{body['login']}' login allaqachon mavjud")
     uid = str(uuid.uuid4())
     await conn.execute(
-        "INSERT INTO users (id,fname,lname,login,password,role,subject,group_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
+        "INSERT INTO users (id,fname,lname,login,password,role,subject,group_id,is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
         uid, body["fname"], body["lname"], body["login"],
         body["password"], body["role"],
-        body.get("subject",""), body.get("group_id")
+        body.get("subject",""), body.get("group_id"), True
     )
     row = await conn.fetchrow("SELECT * FROM users WHERE id=$1", uid)
     return user_out(row)
@@ -93,10 +93,10 @@ async def bulk_create(
         else:
             uid = str(uuid.uuid4())
             await conn.execute(
-                "INSERT INTO users (id,fname,lname,login,password,role,subject,group_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
+                "INSERT INTO users (id,fname,lname,login,password,role,subject,group_id,is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
                 uid, item["fname"], item["lname"], item["login"],
                 item["password"], item["role"],
-                item.get("subject",""), item.get("group_id")
+                item.get("subject",""), item.get("group_id"), True
             )
             added.append(item["login"])
     return {"added": len(added), "updated": len(updated), "logins_added": added, "logins_updated": updated}
