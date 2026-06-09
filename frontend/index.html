@@ -518,7 +518,17 @@ tbody tr:hover td{background:var(--s2)}
         <div class="fg"><label>Guruh *</label><select id="aGroup"><option value="">— Guruh —</option></select></div>
       </div>
       <div class="fg-row">
+        <div class="fg"><label>Topshirish shakli *</label>
+          <select id="aWorkType">
+            <option value="ON">ON — Og'zaki nazorat</option>
+            <option value="JN">JN — Joriy nazorat</option>
+            <option value="YN">YN — Yakuniy nazorat</option>
+            <option value="MT">MT — Mustaqil ta'lim</option>
+          </select>
+        </div>
         <div class="fg"><label>Max baho</label><input type="number" id="aMax" value="100" min="1"></div>
+      </div>
+      <div class="fg-row">
         <div class="fg"><label>Muddat *</label><input type="date" id="aDue"></div>
       </div>
       <div class="fg"><label>Tavsif *</label><textarea id="aDesc" rows="4" placeholder="Topshiriq shartlari..."></textarea></div>
@@ -869,9 +879,24 @@ function sNavById(id){ const el=document.querySelector(`#studentLayout [data-p="
 // ============================================================
 function gid(){ return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
 function fmt(d){ if(!d)return'—'; const dt=new Date(d); return dt.toLocaleDateString('uz-Latn',{day:'2-digit',month:'2-digit',year:'numeric'}); }
-function fmtDT(d){ if(!d)return'—'; const dt=new Date(d),now=new Date(),diff=now-dt;
-  if(diff<60000)return'Hozirgina'; if(diff<3600000)return Math.floor(diff/60000)+' daqiqa oldin';
-  if(diff<86400000)return Math.floor(diff/3600000)+' soat oldin'; return fmt(d); }
+function fmtDT(d){ 
+  if(!d) return '—';
+  const dt = new Date(d);
+  const date = dt.toLocaleDateString('uz-Latn', {day:'2-digit', month:'2-digit', year:'numeric'});
+  const time = dt.toLocaleTimeString('uz-Latn', {hour:'2-digit', minute:'2-digit'});
+  return `${date} ${time}`;
+}
+function getWorkType(desc){
+  if(!desc) return '';
+  const m = desc.match(/\[Shakl: (ON|JN|YN|MT)\]/);
+  return m ? m[1] : '';
+}
+function workTypePill(type){
+  if(!type) return '';
+  const colors = {ON:'blue', JN:'green', YN:'amber', MT:'purple'};
+  const c = colors[type] || 'blue';
+  return `<span class="pill ${c}" style="font-size:10px">${type}</span>`;
+}
 function dueCls(due){ const d=new Date(due),n=new Date(),diff=(d-n)/86400000;
   if(diff<0)return'due-late'; if(diff<3)return'due-soon'; return'due-ok'; }
 function dueLabel(due){ return `<span class="${dueCls(due)}">${fmt(due)}</span>`; }
@@ -1250,7 +1275,7 @@ function renderTAssign(){
     const g=db.groups.find(x=>x.id===a.groupId);
     const isAct=new Date(a.due)>=new Date();
     return`<tr>
-      <td><strong>${a.title}</strong></td><td>${a.subject}</td>
+      <td><strong>${a.title}</strong> ${workTypePill(getWorkType(a.desc))}<div style="font-size:11px;color:var(--t3)">${a.subject}</div></td><td>${a.subject}</td>
       <td>${g?`<span style="background:var(--gbg);color:var(--gtx);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500">${g.name}</span>`:'—'}</td>
       <td>${dueLabel(a.due)}</td>
       <td style="font-family:'DM Mono',monospace">${sc}/${stCnt}</td>
@@ -1361,7 +1386,7 @@ async function saveAssign(){
     const form = new FormData();
     form.append('title', title);
     form.append('subject', sub);
-    form.append('description', desc);
+    form.append('description', desc + (document.getElementById('aWorkType').value ? '\n[Shakl: ' + document.getElementById('aWorkType').value + ']' : ''));
     form.append('max_score', document.getElementById('aMax').value||100);
     form.append('due_date', due);
     form.append('group_id', gid_);
@@ -1521,7 +1546,7 @@ function renderSDash(){
   const pe=document.getElementById('sPending');
   if(!pend.length){pe.innerHTML='<div class="empty" style="padding:1.5rem"><i class="ti ti-circle-check"></i><p>Barcha vazifalar topshirildi</p></div>';}
   else pe.innerHTML='<div class="tw"><table><thead><tr><th>Vazifa</th><th>Fan</th><th>Muddat</th><th></th></tr></thead><tbody>'+
-    pend.map(a=>`<tr><td><strong>${a.title}</strong></td><td>${a.subject}</td><td>${dueLabel(a.due)}</td><td><button class="btn btn-sm btn-primary" onclick="openSubmitM('${a.id}')"><i class="ti ti-send"></i>Topshirish</button></td></tr>`).join('')+'</tbody></table></div>';
+    pend.map(a=>`<tr><td><strong>${a.title}</strong> ${workTypePill(getWorkType(a.desc))}</td><td>${a.subject}</td><td>${dueLabel(a.due)}</td><td><button class="btn btn-sm btn-primary" onclick="openSubmitM('${a.id}')"><i class="ti ti-send"></i>Topshirish</button></td></tr>`).join('')+'</tbody></table></div>';
 
   const rg=document.getElementById('sRecentGr');
   const recGr=[...gr].sort((a,b)=>new Date(b.gradedAt)-new Date(a.gradedAt)).slice(0,4);
