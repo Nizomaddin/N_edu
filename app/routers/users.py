@@ -1,173 +1,145 @@
+import uuid
 from typing import Optional
+import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-
 from app.core.database import get_db
-from app.core.security import get_current_user, require_role, hash_password
-from app.models.user import User
-from app.schemas.schemas import UserCreate, UserUpdate, UserOut, UserBulkCreate, DashboardStats
+from app.routers.auth import get_current_user, require_role, hash_password
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 router = APIRouter()
+bearer_scheme = HTTPBearer()
 
-AdminOnly    = Depends(require_role("admin"))
-AdminTeacher = Depends(require_role("admin", "teacher"))
+def user_out(u):
+    if u is None: return None
+    d = dict(u)
+    return {
+        "id": d["id"], "fname": d["fname"], "lname": d["lname"],
+        "login": d["login"], "role": d["role"], "subject": d.get("subject") or "",
+        "group_id": d.get("group_id"), "is_active": d.get("is_active", True),
+        "created_at": str(d.get("created_at", "")),
+    }
 
+@router.get("/stats")
+async def stats(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    conn: asyncpg.Connection = Depends(get_db),
+):
+    await require_role("admin")(credentials, conn)
+    total = await conn.fetchval("SELECT COUNT(*) FROM users")
+    teachers = await conn.fetchval("SELECT COUNT(*) FROM users WHERE role='teacher'")
+    students = await conn.fetchval("SELECT COUNT(*) FROM users WHERE role='student'")
+    groups = await conn.fetchval("SELECT COUNT(*) FROM groups")
+    assignments = await conn.fetchval("SELECT COUNT(*) FROM assignments")
+    submissions = await conn.fetchval("SELECT COUNT(*) FROM submissions")
+    return {"total_users": total, "total_teachers": teachers, "total_students": students,
+            "total_groups": groups, "total_assignments": assignments, "total_submissions": submissions}
 
-# ── GET /users ──────────────────────────────────────────────
-@router.get("/", response_model=list[UserOut])
+@router.get("/")
 async def list_users(
-    role:     Optional[str] = Query(None),
+    role: Optional[str] = Query(None),
     group_id: Optional[str] = Query(None),
-    search:   Optional[str] = Query(None),
-    db: AsyncSession = Depends(get_db),
-    _=AdminOnly,
+    search: Optional[str] = Query(None),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    conn: asyncpg.Connection = Depends(get_db),
 ):
-    q = select(User)
-    if role:     q = q.where(User.role == role)
-    if group_id: q = q.where(User.group_id == group_id)
+    await require_role("admin", "teacher")(credentials, conn)
+    q = "SELECT * FROM users WHERE 1=1"
+    params = []
+    if role: params.append(role); q += f" AND role=${len(params)}"
+    if group_id: params.append(group_id); q += f" AND group_id=${len(params)}"
     if search:
-        like = f"%{search}%"
-        q = q.where((User.fname.ilike(like)) | (User.lname.ilike(like)) | (User.login.ilike(like)))
-    result = await db.execute(q.order_by(User.created_at.desc()))
-    return [UserOut.model_validate(u) for u in result.scalars().all()]
+        params.append(f"%{search}%")
+        q += f" AND (fname ILIKE ${len(params)} OR lname ILIKE ${len(params)} OR login ILIKE ${len(params)})"
+    q += " ORDER BY created_at DESC"
+    rows = await conn.fetch(q, *params)
+    return [user_out(r) for r in rows]
 
-
-# ── POST /users ─────────────────────────────────────────────
-@router.post("/", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=201)
 async def create_user(
-    body: UserCreate,
-    db: AsyncSession = Depends(get_db),
-    _=AdminOnly,
+    body: dict,
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    conn: asyncpg.Connection = Depends(get_db),
 ):
-    dup = await db.execute(select(User).where(User.login == body.login))
-    if dup.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail=f"'{body.login}' login allaqachon mavjud")
-
-    user = User(
-        fname=body.fname, lname=body.lname,
-        login=body.login, password=hash_password(body.password),
-        role=body.role, subject=body.subject or "",
-        group_id=body.group_id,
+    await require_role("admin")(credentials, conn)
+    dup = await conn.fetchrow("SELECT id FROM users WHERE login=$1", body["login"])
+    if dup: raise HTTPException(400, f"'{body['login']}' login allaqachon mavjud")
+    uid = str(uuid.uuid4())
+    await conn.execute(
+        "INSERT INTO users (id,fname,lname,login,password,role,subject,group_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
+        uid, body["fname"], body["lname"], body["login"],
+        hash_password(body["password"]), body["role"],
+        body.get("subject",""), body.get("group_id")
     )
-    db.add(user)
-    await db.commit()
-    await db.refresh(user)
-    return UserOut.model_validate(user)
+    row = await conn.fetchrow("SELECT * FROM users WHERE id=$1", uid)
+    return user_out(row)
 
-
-# ── POST /users/bulk ─────────────────────────────────────────
-@router.post("/bulk", status_code=status.HTTP_201_CREATED)
-async def bulk_create_users(
-    body: UserBulkCreate,
-    db: AsyncSession = Depends(get_db),
-    _=AdminOnly,
+@router.post("/bulk", status_code=201)
+async def bulk_create(
+    body: dict,
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    conn: asyncpg.Connection = Depends(get_db),
 ):
-    """Excel import uchun — bir nechta foydalanuvchi bir vaqtda"""
-    added, updated, skipped = [], [], []
-
-    for item in body.users:
-        dup = await db.execute(select(User).where(User.login == item.login))
-        existing = dup.scalar_one_or_none()
-
+    await require_role("admin")(credentials, conn)
+    added, updated = [], []
+    for item in body.get("users", []):
+        existing = await conn.fetchrow("SELECT id FROM users WHERE login=$1", item["login"])
         if existing:
-            existing.fname    = item.fname
-            existing.lname    = item.lname
-            existing.password = hash_password(item.password)
-            if item.subject:  existing.subject  = item.subject
-            if item.group_id: existing.group_id = item.group_id
-            updated.append(item.login)
-        else:
-            user = User(
-                fname=item.fname, lname=item.lname,
-                login=item.login, password=hash_password(item.password),
-                role=item.role, subject=item.subject or "",
-                group_id=item.group_id,
+            await conn.execute(
+                "UPDATE users SET fname=$1,lname=$2,password=$3,subject=$4,group_id=$5 WHERE login=$6",
+                item["fname"], item["lname"], hash_password(item["password"]),
+                item.get("subject",""), item.get("group_id"), item["login"]
             )
-            db.add(user)
-            added.append(item.login)
-
-    await db.commit()
+            updated.append(item["login"])
+        else:
+            uid = str(uuid.uuid4())
+            await conn.execute(
+                "INSERT INTO users (id,fname,lname,login,password,role,subject,group_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
+                uid, item["fname"], item["lname"], item["login"],
+                hash_password(item["password"]), item["role"],
+                item.get("subject",""), item.get("group_id")
+            )
+            added.append(item["login"])
     return {"added": len(added), "updated": len(updated), "logins_added": added, "logins_updated": updated}
 
-
-# ── GET /users/stats ─────────────────────────────────────────
-@router.get("/stats", response_model=DashboardStats)
-async def get_stats(db: AsyncSession = Depends(get_db), _=AdminOnly):
-    from app.models.group import Group
-    from app.models.assignment import Assignment
-    from app.models.submission import Submission
-
-    async def count(model, **filters):
-        q = select(func.count()).select_from(model)
-        for col, val in filters.items():
-            q = q.where(getattr(model, col) == val)
-        return (await db.execute(q)).scalar()
-
-    return DashboardStats(
-        total_users       = await count(User),
-        total_teachers    = await count(User, role="teacher"),
-        total_students    = await count(User, role="student"),
-        total_groups      = await count(Group),
-        total_assignments = await count(Assignment),
-        total_submissions = await count(Submission),
-    )
-
-
-# ── GET /users/{id} ──────────────────────────────────────────
-@router.get("/{user_id}", response_model=UserOut)
+@router.get("/{user_id}")
 async def get_user(
     user_id: str,
-    db: AsyncSession = Depends(get_db),
-    current=Depends(get_current_user),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    conn: asyncpg.Connection = Depends(get_db),
 ):
-    # Foydalanuvchi o'zini yoki admin barchani ko'ra oladi
-    if current.role != "admin" and current.id != user_id:
-        raise HTTPException(status_code=403, detail="Ruxsat yo'q")
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-    if not user:
-        raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
-    return UserOut.model_validate(user)
+    current = await get_current_user(credentials, conn)
+    if current["role"] != "admin" and current["id"] != user_id:
+        raise HTTPException(403, "Ruxsat yo'q")
+    row = await conn.fetchrow("SELECT * FROM users WHERE id=$1", user_id)
+    if not row: raise HTTPException(404, "Topilmadi")
+    return user_out(row)
 
-
-# ── PATCH /users/{id} ────────────────────────────────────────
-@router.patch("/{user_id}", response_model=UserOut)
+@router.patch("/{user_id}")
 async def update_user(
     user_id: str,
-    body: UserUpdate,
-    db: AsyncSession = Depends(get_db),
-    _=AdminOnly,
+    body: dict,
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    conn: asyncpg.Connection = Depends(get_db),
 ):
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-    if not user:
-        raise HTTPException(status_code=404, detail="Topilmadi")
+    await require_role("admin")(credentials, conn)
+    sets, params = [], []
+    for field in ["fname","lname","subject","group_id","is_active"]:
+        if field in body:
+            params.append(body[field]); sets.append(f"{field}=${len(params)}")
+    if "password" in body:
+        params.append(hash_password(body["password"])); sets.append(f"password=${len(params)}")
+    if not sets: raise HTTPException(400, "Hech narsa o'zgartirilmadi")
+    params.append(user_id)
+    await conn.execute(f"UPDATE users SET {','.join(sets)} WHERE id=${len(params)}", *params)
+    row = await conn.fetchrow("SELECT * FROM users WHERE id=$1", user_id)
+    return user_out(row)
 
-    if body.fname:     user.fname    = body.fname
-    if body.lname:     user.lname    = body.lname
-    if body.password:  user.password = hash_password(body.password)
-    if body.subject is not None:  user.subject  = body.subject
-    if body.group_id  is not None: user.group_id = body.group_id
-    if body.is_active is not None: user.is_active = body.is_active
-
-    await db.commit()
-    await db.refresh(user)
-    return UserOut.model_validate(user)
-
-
-# ── DELETE /users/{id} ───────────────────────────────────────
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{user_id}", status_code=204)
 async def delete_user(
     user_id: str,
-    db: AsyncSession = Depends(get_db),
-    current=Depends(require_role("admin")),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    conn: asyncpg.Connection = Depends(get_db),
 ):
-    if current.id == user_id:
-        raise HTTPException(status_code=400, detail="O'zingizni o'chira olmaysiz")
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-    if not user:
-        raise HTTPException(status_code=404, detail="Topilmadi")
-    await db.delete(user)
-    await db.commit()
+    current = await require_role("admin")(credentials, conn)
+    if current["id"] == user_id: raise HTTPException(400, "O'zingizni o'chira olmaysiz")
+    await conn.execute("DELETE FROM users WHERE id=$1", user_id)

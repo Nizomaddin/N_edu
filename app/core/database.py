@@ -1,45 +1,33 @@
 import os
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase
+import asyncpg
+from typing import AsyncGenerator
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+asyncpg://postgres.ykyavqikndorzoaglkop:Nizomaddin2026@aws-1-ap-south-1.pooler.supabase.com:6543/postgres"
+    "postgresql://postgres.ykyavqikndorzoaglkop:Nizomaddin2026@aws-1-ap-south-1.pooler.supabase.com:6543/postgres"
 )
 
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
-elif DATABASE_URL.startswith("postgresql://") and "+asyncpg" not in DATABASE_URL:
-    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
-
-# Supabase pgbouncer uchun - statement_cache_size=0 MAJBURIY
-engine = create_async_engine(
-    DATABASE_URL,
-    echo=False,
-    connect_args={
-        "ssl": "require",
-        "statement_cache_size": 0,
-        "prepared_statement_cache_size": 0,
-    },
-    pool_pre_ping=False,
-    pool_size=1,
-    max_overflow=0,
-)
-
-AsyncSessionLocal = async_sessionmaker(
-    engine,
-    expire_on_commit=False,
-    class_=AsyncSession,
-)
+# URL dan postgresql+asyncpg:// ni postgresql:// ga o'tkazish
+if DATABASE_URL.startswith("postgresql+asyncpg://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://", 1)
+elif DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 
-class Base(DeclarativeBase):
-    pass
+async def get_conn() -> AsyncGenerator[asyncpg.Connection, None]:
+    """Har bir request uchun yangi ulanish"""
+    conn = await asyncpg.connect(
+        DATABASE_URL,
+        ssl="require",
+        statement_cache_size=0,
+    )
+    try:
+        yield conn
+    finally:
+        await conn.close()
 
 
 async def get_db():
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
+    """FastAPI Depends uchun"""
+    async for conn in get_conn():
+        yield conn

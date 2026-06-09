@@ -1,145 +1,100 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-
+import uuid
+import asyncpg
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.database import get_db
-from app.core.security import get_current_user, require_role
-from app.models.group import Group
-from app.models.user import User
-from app.models.assignment import Assignment
-from app.schemas.schemas import GroupCreate, GroupUpdate, GroupOut, GroupDetail, UserOut
+from app.routers.auth import get_current_user, require_role
+from app.routers.users import user_out
 
 router = APIRouter()
-AdminOnly = Depends(require_role("admin"))
+bearer_scheme = HTTPBearer()
 
+def group_out(g, teacher=None, students=None, assignment_count=0):
+    d = dict(g)
+    result = {
+        "id": d["id"], "name": d["name"], "dept": d.get("dept",""),
+        "teacher_id": d.get("teacher_id"), "created_at": str(d.get("created_at","")),
+    }
+    if teacher is not None: result["teacher"] = user_out(teacher)
+    if students is not None:
+        result["students"] = [user_out(s) for s in students]
+        result["assignment_count"] = assignment_count
+    return result
 
-@router.get("/", response_model=list[GroupOut])
+@router.get("/")
 async def list_groups(
-    db: AsyncSession = Depends(get_db),
-    current=Depends(get_current_user),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    conn: asyncpg.Connection = Depends(get_db),
 ):
-    result = await db.execute(select(Group).order_by(Group.created_at.desc()))
-    return [GroupOut.model_validate(g) for g in result.scalars().all()]
+    await get_current_user(credentials, conn)
+    rows = await conn.fetch("SELECT * FROM groups ORDER BY created_at DESC")
+    return [group_out(r) for r in rows]
 
-
-@router.post("/", response_model=GroupOut, status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=201)
 async def create_group(
-    body: GroupCreate,
-    db: AsyncSession = Depends(get_db),
-    _=AdminOnly,
+    body: dict,
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    conn: asyncpg.Connection = Depends(get_db),
 ):
-    group = Group(name=body.name, dept=body.dept or "", teacher_id=body.teacher_id)
-    db.add(group)
-    await db.commit()
-    await db.refresh(group)
+    await require_role("admin")(credentials, conn)
+    gid = str(uuid.uuid4())
+    await conn.execute(
+        "INSERT INTO groups (id,name,dept,teacher_id) VALUES ($1,$2,$3,$4)",
+        gid, body["name"], body.get("dept",""), body.get("teacher_id")
+    )
+    if body.get("teacher_id"):
+        await conn.execute("UPDATE users SET group_id=$1 WHERE id=$2", gid, body["teacher_id"])
+    row = await conn.fetchrow("SELECT * FROM groups WHERE id=$1", gid)
+    return group_out(row)
 
-    # O'qituvchini guruhga biriktirish
-    if body.teacher_id:
-        res = await db.execute(select(User).where(User.id == body.teacher_id))
-        teacher = res.scalar_one_or_none()
-        if teacher:
-            teacher.group_id = group.id
-            await db.commit()
-
-    return GroupOut.model_validate(group)
-
-
-@router.get("/{group_id}", response_model=GroupDetail)
+@router.get("/{group_id}")
 async def get_group(
     group_id: str,
-    db: AsyncSession = Depends(get_db),
-    current=Depends(get_current_user),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    conn: asyncpg.Connection = Depends(get_db),
 ):
-    res = await db.execute(select(Group).where(Group.id == group_id))
-    group = res.scalar_one_or_none()
-    if not group:
-        raise HTTPException(status_code=404, detail="Guruh topilmadi")
-
+    await get_current_user(credentials, conn)
+    g = await conn.fetchrow("SELECT * FROM groups WHERE id=$1", group_id)
+    if not g: raise HTTPException(404, "Guruh topilmadi")
     teacher = None
-    if group.teacher_id:
-        tr = await db.execute(select(User).where(User.id == group.teacher_id))
-        teacher = tr.scalar_one_or_none()
+    if g["teacher_id"]:
+        teacher = await conn.fetchrow("SELECT * FROM users WHERE id=$1", g["teacher_id"])
+    students = await conn.fetch("SELECT * FROM users WHERE group_id=$1 AND role='student'", group_id)
+    ac = await conn.fetchval("SELECT COUNT(*) FROM assignments WHERE group_id=$1", group_id)
+    return group_out(g, teacher, students, ac)
 
-    students_res = await db.execute(
-        select(User).where(User.group_id == group_id, User.role == "student")
-    )
-    students = students_res.scalars().all()
-
-    assign_count = (await db.execute(
-        select(func.count()).select_from(Assignment).where(Assignment.group_id == group_id)
-    )).scalar()
-
-    return GroupDetail(
-        **GroupOut.model_validate(group).model_dump(),
-        teacher=UserOut.model_validate(teacher) if teacher else None,
-        students=[UserOut.model_validate(s) for s in students],
-        assignment_count=assign_count,
-    )
-
-
-@router.patch("/{group_id}", response_model=GroupOut)
+@router.patch("/{group_id}")
 async def update_group(
     group_id: str,
-    body: GroupUpdate,
-    db: AsyncSession = Depends(get_db),
-    _=AdminOnly,
+    body: dict,
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    conn: asyncpg.Connection = Depends(get_db),
 ):
-    res = await db.execute(select(Group).where(Group.id == group_id))
-    group = res.scalar_one_or_none()
-    if not group:
-        raise HTTPException(status_code=404, detail="Topilmadi")
+    await require_role("admin")(credentials, conn)
+    g = await conn.fetchrow("SELECT * FROM groups WHERE id=$1", group_id)
+    if not g: raise HTTPException(404, "Topilmadi")
+    sets, params = [], []
+    for field in ["name","dept","teacher_id"]:
+        if field in body:
+            params.append(body[field]); sets.append(f"{field}=${len(params)}")
+    if sets:
+        params.append(group_id)
+        await conn.execute(f"UPDATE groups SET {','.join(sets)} WHERE id=${len(params)}", *params)
+    if "teacher_id" in body and body["teacher_id"]:
+        await conn.execute("UPDATE users SET group_id=$1 WHERE id=$2", group_id, body["teacher_id"])
+    if "student_ids" in body:
+        await conn.execute("UPDATE users SET group_id=NULL WHERE group_id=$1 AND role='student'", group_id)
+        for sid in body["student_ids"]:
+            await conn.execute("UPDATE users SET group_id=$1 WHERE id=$2", group_id, sid)
+    row = await conn.fetchrow("SELECT * FROM groups WHERE id=$1", group_id)
+    return group_out(row)
 
-    if body.name is not None:       group.name = body.name
-    if body.dept is not None:       group.dept = body.dept
-    if body.teacher_id is not None:
-        # Avvalgi o'qituvchidan guruhni olib, yangisiga berish
-        if group.teacher_id and group.teacher_id != body.teacher_id:
-            old_t = await db.execute(select(User).where(User.id == group.teacher_id))
-            old_teacher = old_t.scalar_one_or_none()
-            if old_teacher and old_teacher.group_id == group_id:
-                old_teacher.group_id = None
-        group.teacher_id = body.teacher_id
-        new_t = await db.execute(select(User).where(User.id == body.teacher_id))
-        new_teacher = new_t.scalar_one_or_none()
-        if new_teacher:
-            new_teacher.group_id = group_id
-
-    # Talabalarni yangilash
-    if body.student_ids is not None:
-        # Avvalgi talabalardan guruhni olib tashlash
-        old_students = await db.execute(
-            select(User).where(User.group_id == group_id, User.role == "student")
-        )
-        for s in old_students.scalars().all():
-            s.group_id = None
-
-        # Yangi talabalarni biriktirish
-        for sid in body.student_ids:
-            sr = await db.execute(select(User).where(User.id == sid))
-            student = sr.scalar_one_or_none()
-            if student:
-                student.group_id = group_id
-
-    await db.commit()
-    await db.refresh(group)
-    return GroupOut.model_validate(group)
-
-
-@router.delete("/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{group_id}", status_code=204)
 async def delete_group(
     group_id: str,
-    db: AsyncSession = Depends(get_db),
-    _=AdminOnly,
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    conn: asyncpg.Connection = Depends(get_db),
 ):
-    res = await db.execute(select(Group).where(Group.id == group_id))
-    group = res.scalar_one_or_none()
-    if not group:
-        raise HTTPException(status_code=404, detail="Topilmadi")
-
-    # Foydalanuvchilardan guruhni olib tashlash
-    members = await db.execute(select(User).where(User.group_id == group_id))
-    for u in members.scalars().all():
-        u.group_id = None
-
-    await db.delete(group)
-    await db.commit()
+    await require_role("admin")(credentials, conn)
+    await conn.execute("UPDATE users SET group_id=NULL WHERE group_id=$1", group_id)
+    await conn.execute("DELETE FROM groups WHERE id=$1", group_id)

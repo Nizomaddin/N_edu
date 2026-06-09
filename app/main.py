@@ -3,11 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers import auth, users, groups, assignments, submissions
 
-
-app = FastAPI(
-    title="EduPortal API",
-    version="1.0.0",
-)
+app = FastAPI(title="EduPortal API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,7 +18,6 @@ app.include_router(users.router,       prefix="/api/users",       tags=["Users"]
 app.include_router(groups.router,      prefix="/api/groups",      tags=["Groups"])
 app.include_router(assignments.router, prefix="/api/assignments", tags=["Assignments"])
 app.include_router(submissions.router, prefix="/api/submissions", tags=["Submissions"])
-
 
 @app.get("/")
 async def root():

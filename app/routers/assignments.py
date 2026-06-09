@@ -1,133 +1,105 @@
+import uuid
 import os
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
-from fastapi.responses import JSONResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-
+from datetime import date
+import asyncpg
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.database import get_db
-from app.core.security import get_current_user, require_role
-from app.models.assignment import Assignment
-from app.models.submission import Submission
-from app.models.user import User
-from app.schemas.schemas import AssignmentCreate, AssignmentOut, AssignmentDetail, UserOut
+from app.routers.auth import get_current_user, require_role
+from app.routers.users import user_out
 
 router = APIRouter()
+bearer_scheme = HTTPBearer()
 
-SUPABASE_URL    = os.getenv("SUPABASE_URL", "")
-SUPABASE_KEY    = os.getenv("SUPABASE_SERVICE_KEY", "")
-STORAGE_BUCKET  = "assignments"
+SUPABASE_URL   = os.getenv("SUPABASE_URL","")
+SUPABASE_KEY   = os.getenv("SUPABASE_SERVICE_KEY","")
+BUCKET         = "assignments"
 
-
-async def upload_to_supabase(file: UploadFile, folder: str) -> tuple[str, str]:
-    """Faylni Supabase Storage ga yuklash, (file_name, public_url) qaytaradi"""
-    import httpx, uuid
-    ext = file.filename.rsplit(".", 1)[-1] if "." in file.filename else "bin"
-    storage_path = f"{folder}/{uuid.uuid4().hex}.{ext}"
+async def upload_file(file: UploadFile, folder: str):
+    if not SUPABASE_URL or not SUPABASE_KEY: return None, None
+    ext = file.filename.rsplit(".",1)[-1] if "." in file.filename else "bin"
+    path = f"{folder}/{uuid.uuid4().hex}.{ext}"
     content = await file.read()
-
-    url = f"{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{storage_path}"
-    headers = {
-        "Authorization": f"Bearer {SUPABASE_KEY}",
-        "Content-Type": file.content_type or "application/octet-stream",
-    }
+    url = f"{SUPABASE_URL}/storage/v1/object/{BUCKET}/{path}"
+    headers = {"Authorization": f"Bearer {SUPABASE_KEY}", "Content-Type": file.content_type or "application/octet-stream"}
     async with httpx.AsyncClient() as client:
         resp = await client.post(url, content=content, headers=headers)
-        if resp.status_code not in (200, 201):
-            raise HTTPException(status_code=500, detail=f"Fayl yuklashda xato: {resp.text}")
+    if resp.status_code not in (200,201): return file.filename, None
+    return file.filename, f"{SUPABASE_URL}/storage/v1/object/public/{BUCKET}/{path}"
 
-    public_url = f"{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{storage_path}"
-    return file.filename, public_url
+def assign_out(a, teacher=None, submitted_count=None, student_count=None):
+    d = dict(a)
+    result = {
+        "id": d["id"], "title": d["title"], "subject": d["subject"],
+        "description": d["description"], "max_score": d["max_score"],
+        "due_date": str(d["due_date"]), "teacher_id": d["teacher_id"],
+        "group_id": d["group_id"], "file_name": d.get("file_name"),
+        "file_url": d.get("file_url"), "created_at": str(d.get("created_at","")),
+    }
+    if teacher is not None: result["teacher"] = user_out(teacher)
+    if submitted_count is not None: result["submitted_count"] = submitted_count
+    if student_count is not None: result["student_count"] = student_count
+    return result
 
-
-# ── GET /assignments ─────────────────────────────────────────
-@router.get("/", response_model=list[AssignmentOut])
+@router.get("/")
 async def list_assignments(
-    db: AsyncSession = Depends(get_db),
-    current=Depends(get_current_user),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    conn: asyncpg.Connection = Depends(get_db),
 ):
-    q = select(Assignment)
-    if current.role == "teacher":
-        q = q.where(Assignment.teacher_id == current.id)
-    elif current.role == "student":
-        q = q.where(Assignment.group_id == current.group_id)
-    result = await db.execute(q.order_by(Assignment.created_at.desc()))
-    return [AssignmentOut.model_validate(a) for a in result.scalars().all()]
+    user = await get_current_user(credentials, conn)
+    if user["role"] == "teacher":
+        rows = await conn.fetch("SELECT * FROM assignments WHERE teacher_id=$1 ORDER BY created_at DESC", user["id"])
+    elif user["role"] == "student":
+        rows = await conn.fetch("SELECT * FROM assignments WHERE group_id=$1 ORDER BY created_at DESC", user["group_id"])
+    else:
+        rows = await conn.fetch("SELECT * FROM assignments ORDER BY created_at DESC")
+    return [assign_out(r) for r in rows]
 
-
-# ── POST /assignments ────────────────────────────────────────
-@router.post("/", response_model=AssignmentOut, status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=201)
 async def create_assignment(
-    title:       str = Form(...),
-    subject:     str = Form(...),
-    description: str = Form(...),
-    max_score:   int = Form(100),
-    due_date:    str = Form(...),
-    group_id:    str = Form(...),
+    title: str = Form(...), subject: str = Form(...), description: str = Form(...),
+    max_score: int = Form(100), due_date: str = Form(...), group_id: str = Form(...),
     file: UploadFile = File(None),
-    db: AsyncSession = Depends(get_db),
-    current=Depends(require_role("teacher")),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    conn: asyncpg.Connection = Depends(get_db),
 ):
-    from datetime import date
+    user = await require_role("teacher")(credentials, conn)
     file_name, file_url = None, None
     if file and file.filename:
-        file_name, file_url = await upload_to_supabase(file, f"assignments/{current.id}")
-
-    assignment = Assignment(
-        title=title, subject=subject, description=description,
-        max_score=max_score, due_date=date.fromisoformat(due_date),
-        teacher_id=current.id, group_id=group_id,
-        file_name=file_name, file_url=file_url,
+        file_name, file_url = await upload_file(file, f"assignments/{user['id']}")
+    aid = str(uuid.uuid4())
+    await conn.execute(
+        "INSERT INTO assignments (id,title,subject,description,max_score,due_date,teacher_id,group_id,file_name,file_url) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
+        aid, title, subject, description, max_score, date.fromisoformat(due_date),
+        user["id"], group_id, file_name, file_url
     )
-    db.add(assignment)
-    await db.commit()
-    await db.refresh(assignment)
-    return AssignmentOut.model_validate(assignment)
+    row = await conn.fetchrow("SELECT * FROM assignments WHERE id=$1", aid)
+    return assign_out(row)
 
-
-# ── GET /assignments/{id} ────────────────────────────────────
-@router.get("/{assignment_id}", response_model=AssignmentDetail)
+@router.get("/{assignment_id}")
 async def get_assignment(
     assignment_id: str,
-    db: AsyncSession = Depends(get_db),
-    current=Depends(get_current_user),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    conn: asyncpg.Connection = Depends(get_db),
 ):
-    res = await db.execute(select(Assignment).where(Assignment.id == assignment_id))
-    a = res.scalar_one_or_none()
-    if not a:
-        raise HTTPException(status_code=404, detail="Topshiriq topilmadi")
+    await get_current_user(credentials, conn)
+    a = await conn.fetchrow("SELECT * FROM assignments WHERE id=$1", assignment_id)
+    if not a: raise HTTPException(404, "Topshiriq topilmadi")
+    teacher = await conn.fetchrow("SELECT * FROM users WHERE id=$1", a["teacher_id"])
+    sc = await conn.fetchval("SELECT COUNT(*) FROM submissions WHERE assignment_id=$1", assignment_id)
+    stc = await conn.fetchval("SELECT COUNT(*) FROM users WHERE group_id=$1 AND role='student'", a["group_id"])
+    return assign_out(a, teacher, sc, stc)
 
-    teacher_res = await db.execute(select(User).where(User.id == a.teacher_id))
-    teacher = teacher_res.scalar_one_or_none()
-
-    sub_count = (await db.execute(
-        select(func.count()).select_from(Submission).where(Submission.assignment_id == assignment_id)
-    )).scalar()
-
-    student_count = (await db.execute(
-        select(func.count()).select_from(User)
-        .where(User.group_id == a.group_id, User.role == "student")
-    )).scalar()
-
-    return AssignmentDetail(
-        **AssignmentOut.model_validate(a).model_dump(),
-        teacher=UserOut.model_validate(teacher) if teacher else None,
-        submitted_count=sub_count,
-        student_count=student_count,
-    )
-
-
-# ── DELETE /assignments/{id} ─────────────────────────────────
-@router.delete("/{assignment_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{assignment_id}", status_code=204)
 async def delete_assignment(
     assignment_id: str,
-    db: AsyncSession = Depends(get_db),
-    current=Depends(require_role("teacher", "admin")),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    conn: asyncpg.Connection = Depends(get_db),
 ):
-    res = await db.execute(select(Assignment).where(Assignment.id == assignment_id))
-    a = res.scalar_one_or_none()
-    if not a:
-        raise HTTPException(status_code=404, detail="Topilmadi")
-    if current.role == "teacher" and a.teacher_id != current.id:
-        raise HTTPException(status_code=403, detail="Bu sizning topshirig'ingiz emas")
-    await db.delete(a)
-    await db.commit()
+    user = await require_role("teacher","admin")(credentials, conn)
+    a = await conn.fetchrow("SELECT * FROM assignments WHERE id=$1", assignment_id)
+    if not a: raise HTTPException(404, "Topilmadi")
+    if user["role"] == "teacher" and a["teacher_id"] != user["id"]:
+        raise HTTPException(403, "Bu sizning topshirig'ingiz emas")
+    await conn.execute("DELETE FROM assignments WHERE id=$1", assignment_id)
