@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduPortal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+:root{--bg:#f5f4f1;--surface:#fff;--s2:#f0efe9;--s3:#e8e7e0;--border:#e2e0d8;--border2:#cbc9bf;--text:#1a1915;--t2:#6b6960;--t3:#9e9c95;--blue:#1a56db;--bbg:#eff4ff;--btx:#1e429f;--green:#057a55;--gbg:#f3faf7;--gtx:#014737;--amber:#b45309;--abg:#fffbeb;--atx:#92400e;--red:#c81e1e;--rbg:#fdf2f2;--rtx:#9b1c1c;--purple:#6d28d9;--pbg:#f5f3ff;--ptx:#4c1d95;--r:10px;--rs:6px;--sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shm:0 4px 16px rgba(0,0,0,.1),0 2px 4px rgba(0,0,0,.06)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+
+/* LOGIN */
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:1rem}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2.5rem 2rem;width:100%;max-width:400px;box-shadow:var(--shm)}
+.login-logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:600;margin-bottom:4px}
+.login-logo i{font-size:26px;color:var(--blue)}
+.login-sub{font-size:13px;color:var(--t2);margin-bottom:2rem}
+.role-tabs{display:flex;gap:4px;background:var(--s2);border-radius:var(--rs);padding:3px;margin-bottom:1.5rem}
+.role-tab{flex:1;padding:7px;text-align:center;border-radius:4px;cursor:pointer;font-size:13px;font-weight:500;color:var(--t2);transition:all .12s}
+.role-tab.active{background:var(--surface);color:var(--text);box-shadow:var(--sh)}
+.role-tab i{display:block;font-size:18px;margin-bottom:2px}
+
+/* FORMS */
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:12px;font-weight:500;color:var(--t2);margin-bottom:4px}
+.fg input,.fg select,.fg textarea{width:100%;border:1px solid var(--border);border-radius:var(--rs);padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.08)}
+.fg textarea{resize:vertical;min-height:80px}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.input-icon{position:relative}.input-icon i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:17px;pointer-events:none}
+.input-icon input{padding-left:34px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all .12s;white-space:nowrap}
+.btn:hover{background:var(--s2);border-color:var(--border2)}
+.btn i{font-size:15px}
+.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn-primary:hover{background:#1648c8;border-color:#1648c8}
+.btn-green{background:var(--green);border-color:var(--green);color:#fff}
+.btn-green:hover{background:#046644}
+.btn-danger{background:var(--rbg);border-color:#fca5a5;color:var(--red)}
+.btn-danger:hover{background:#fee2e2}
+.btn-amber{background:var(--abg);border-color:#fde68a;color:var(--amber)}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-sm i{font-size:14px}
+.btn-full{width:100%;justify-content:center}
+
+/* APP LAYOUT */
+#app{display:none;height:100vh;overflow:hidden}
+.layout{display:flex;height:100vh}
+.sidebar{width:230px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.sb-brand{padding:1.1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;font-size:15px;font-weight:600}
+.sb-brand i{font-size:20px;color:var(--blue)}
+.sb-user{padding:.7rem 1.25rem;border-bottom:1px solid var(--border);background:var(--s2)}
+.sb-user .uname{font-size:13px;font-weight:500}
+.sb-user .urole{font-size:11px;color:var(--t3);display:flex;align-items:center;gap:4px;margin-top:2px}
+.sb-user .urole i{font-size:13px}
+.nav-grp{padding:.5rem 0}
+.nav-lbl{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;padding:.4rem 1.25rem .2rem}
+.nav-item{display:flex;align-items:center;gap:9px;padding:.5rem 1.25rem;font-size:13px;color:var(--t2);cursor:pointer;border-left:2.5px solid transparent;transition:all .12s}
+.nav-item:hover{background:var(--s2);color:var(--text)}
+.nav-item.active{background:var(--bbg);color:var(--btx);border-left-color:var(--blue);font-weight:500}
+.nav-item i{font-size:17px}
+.nbadge{margin-left:auto;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:600;min-width:18px;text-align:center;color:#fff}
+.nbadge.blue{background:var(--blue)}
+.nbadge.green{background:var(--green)}
+.nbadge.amber{background:var(--amber)}
+.nbadge.red{background:var(--red)}
+.nb-role-admin{background:var(--rbg);color:var(--red);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:4px}
+.nb-role-teacher{background:var(--bbg);color:var(--btx);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:4px}
+.nb-role-student{background:var(--gbg);color:var(--gtx);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:4px}
+.sb-footer{margin-top:auto;padding:.875rem 1.25rem;border-top:1px solid var(--border)}
+.logout-link{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);cursor:pointer;padding:.35rem 0}
+.logout-link:hover{color:var(--red)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:.8rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px}
+.topbar-title{font-size:15px;font-weight:600}
+.topbar-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.content{flex:1;overflow-y:auto;padding:1.5rem}
+
+/* PANELS */
+.panel{display:none}.panel.active{display:block}
+
+/* STATS */
+.stats-row{display:grid;gap:12px;margin-bottom:1.25rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.25rem;box-shadow:var(--sh)}
+.stat-card .sl{font-size:12px;color:var(--t2);margin-bottom:5px}
+.stat-card .sv{font-size:24px;font-weight:600;font-family:'DM Mono',monospace}
+.stat-card .ss{font-size:11px;color:var(--t3);margin-top:2px}
+.sv.blue{color:var(--blue)}.sv.green{color:var(--green)}.sv.amber{color:var(--amber)}.sv.red{color:var(--red)}.sv.purple{color:var(--purple)}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:1rem;overflow:hidden}
+.card-head{padding:.8rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-head h3{font-size:14px;font-weight:600}
+.card-body{padding:1.25rem}
+
+/* TABLE */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;padding:.55rem 1rem;background:var(--s2);border-bottom:1px solid var(--border)}
+td{padding:.65rem 1rem;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--s2)}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:500;padding:2px 9px;border-radius:20px;white-space:nowrap}
+.pill::before{content:'';width:5px;height:5px;border-radius:50%;display:inline-block;flex-shrink:0}
+.pill.active{background:var(--gbg);color:var(--gtx)}.pill.active::before{background:var(--green)}
+.pill.pending{background:var(--abg);color:var(--atx)}.pill.pending::before{background:var(--amber)}
+.pill.done,.pill.graded{background:var(--bbg);color:var(--btx)}.pill.done::before,.pill.graded::before{background:var(--blue)}
+.pill.late{background:var(--rbg);color:var(--rtx)}.pill.late::before{background:var(--red)}
+.pill.admin{background:var(--rbg);color:var(--rtx)}.pill.admin::before{background:var(--red)}
+.pill.teacher{background:var(--bbg);color:var(--btx)}.pill.teacher::before{background:var(--blue)}
+.pill.student{background:var(--gbg);color:var(--gtx)}.pill.student::before{background:var(--green)}
+
+/* AVATAR */
+.ava{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.ava.blue{background:var(--bbg);color:var(--btx)}
+.ava.green{background:var(--gbg);color:var(--gtx)}
+.ava.red{background:var(--rbg);color:var(--rtx)}
+.ava.purple{background:var(--pbg);color:var(--ptx)}
+
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;padding:1rem}
+.modal-ov.open{display:flex}
+.modal{background:var(--surface);border-radius:14px;width:100%;max-width:520px;box-shadow:var(--shm);max-height:92vh;overflow-y:auto}
+.modal.wide{max-width:700px}
+.mhead{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.mhead h3{font-size:15px;font-weight:600}
+.mclose{background:none;border:none;cursor:pointer;color:var(--t2);font-size:20px;padding:2px;line-height:1}
+.mclose:hover{color:var(--text)}
+.mbody{padding:1.25rem}
+.mfoot{padding:.875rem 1.25rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+
+/* UPLOAD */
+.uzone{border:2px dashed var(--border2);border-radius:var(--r);padding:1.5rem;text-align:center;cursor:pointer;transition:all .15s;background:var(--s2)}
+.uzone:hover,.uzone.drag{border-color:var(--blue);background:var(--bbg)}
+.uzone i{font-size:32px;color:var(--t3);display:block;margin-bottom:8px}
+.uzone.chosen{background:var(--gbg);border-color:var(--green)}.uzone.chosen i{color:var(--green)}
+.uzone p{font-size:13px;color:var(--t2)}.uzone span{font-size:11px;color:var(--t3)}
+
+/* FILE TAG */
+.ftag{display:inline-flex;align-items:center;gap:5px;background:var(--bbg);color:var(--btx);border:1px solid #bfdbfe;border-radius:var(--rs);padding:3px 9px;font-size:12px;font-weight:500;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ftag i{font-size:14px;flex-shrink:0}
+
+/* CREDENTIAL BOX */
+.cred-box{background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:.875rem 1rem;font-family:'DM Mono',monospace;font-size:13px;margin-top:8px}
+.cred-box .cl{font-size:11px;color:var(--t3);margin-bottom:3px;font-family:'DM Sans',sans-serif}
+.cred-val{font-weight:500;color:var(--text);letter-spacing:.02em}
+.cred-copy{display:inline-flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;color:var(--blue);margin-left:8px;font-family:'DM Sans',sans-serif}
+
+/* PROGRESS */
+.pbar{height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+.pfill{height:100%;border-radius:3px;background:var(--blue);transition:width .3s}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:300;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--text);color:#fff;padding:.65rem 1rem;border-radius:var(--rs);font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;box-shadow:var(--shm);animation:tin .2s ease}
+.toast i{font-size:16px}.toast.ok{background:var(--green)}.toast.err{background:var(--red)}
+@keyframes tin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* EMPTY */
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--t2)}
+.empty i{font-size:40px;color:var(--t3);display:block;margin-bottom:10px}
+.empty p{font-size:14px;font-weight:500;margin-bottom:3px}
+.empty span{font-size:12px;color:var(--t3)}
+
+/* LINK */
+.lnk{color:var(--blue);cursor:pointer;font-weight:500}.lnk:hover{text-decoration:underline}
+
+/* DUE */
+.due-ok{color:var(--t2)}.due-soon{color:var(--amber);font-weight:500}.due-late{color:var(--red);font-weight:500}
+
+/* INFO BLOCK */
+.info-block{background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:.875rem 1rem;font-size:13px;margin-bottom:12px}
+.info-block.warn{background:var(--abg);border-color:#fde68a}
+.info-block.success{background:var(--gbg);border-color:#a7f3d0}
+
+/* SECTION DIVIDER */
+.sdiv{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin:1rem 0 .5rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
+
+/* SEARCH */
+.swrap{position:relative}.swrap i{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:16px}
+.swrap input{padding-left:32px}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo"><i class="ti ti-school"></i>EduPortal</div>
+    <p class="login-sub">Tizimga kirish</p>
+    <div class="role-tabs">
+      <div class="role-tab active" onclick="setRoleTab('admin',this)"><i class="ti ti-shield-lock"></i>Admin</div>
+      <div class="role-tab" onclick="setRoleTab('teacher',this)"><i class="ti ti-user-star"></i>O'qituvchi</div>
+      <div class="role-tab" onclick="setRoleTab('student',this)"><i class="ti ti-user-check"></i>Talaba</div>
+    </div>
+    <div class="fg input-icon">
+      <label>Login</label>
+      <i class="ti ti-user"></i>
+      <input type="text" id="loginUser" placeholder="login kiriting" autocomplete="username">
+    </div>
+    <div class="fg input-icon">
+      <label>Parol</label>
+      <i class="ti ti-lock"></i>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div id="loginErr" style="font-size:12px;color:var(--red);margin-bottom:10px;display:none"></div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()"><i class="ti ti-login"></i>Kirish</button>
+    <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--t3);margin-bottom:6px;text-align:center">Demo kirish</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+        <button class="btn btn-sm" onclick="demoLogin('admin')"><i class="ti ti-shield"></i>Admin</button>
+        <button class="btn btn-sm" onclick="demoLogin('teacher')"><i class="ti ti-user-star"></i>O'qituvchi</button>
+        <button class="btn btn-sm" onclick="demoLogin('student')"><i class="ti ti-user-check"></i>Talaba</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+
+<!-- ADMIN LAYOUT -->
+<div id="adminLayout" class="layout" style="display:none">
+  <div class="sidebar">
+    <div class="sb-brand"><i class="ti ti-school"></i>EduPortal</div>
+    <div class="sb-user">
+      <div class="uname" id="adminName"></div>
+      <div class="urole"><i class="ti ti-shield-lock"></i>Administrator</div>
+    </div>
+    <div class="nav-grp">
+      <div class="nav-lbl">Boshqaruv</div>
+      <div class="nav-item active" data-p="aDash" onclick="aNav(this)"><i class="ti ti-layout-dashboard"></i>Bosh sahifa</div>
+      <div class="nav-item" data-p="aUsers" onclick="aNav(this)"><i class="ti ti-users"></i>Foydalanuvchilar <span class="nbadge blue" id="aUsersBadge">0</span></div>
+      <div class="nav-item" data-p="aGroups" onclick="aNav(this)"><i class="ti ti-building-community"></i>Guruhlar <span class="nbadge green" id="aGroupsBadge">0</span></div>
+      <div class="nav-item" data-p="aAssigns" onclick="aNav(this)"><i class="ti ti-file-text"></i>Topshiriqlar <span class="nbadge amber" id="aAssignsBadge">0</span></div>
+    </div>
+    <div class="sb-footer">
+      <div class="logout-link" onclick="logout()"><i class="ti ti-logout"></i>Chiqish</div>
+    </div>
+  </div>
+  <div class="main">
+    <div id="aDash" class="panel active">
+      <div class="topbar"><div class="topbar-title">Bosh sahifa</div></div>
+      <div class="content">
+        <div class="stats-row" id="aStats" style="grid-template-columns:repeat(4,1fr)"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+          <div class="card"><div class="card-head"><h3>So'nggi foydalanuvchilar</h3><span class="lnk" onclick="aNavById('aUsers')">Barchasi →</span></div><div id="aRecentUsers"></div></div>
+          <div class="card"><div class="card-head"><h3>Guruhlar holati</h3><span class="lnk" onclick="aNavById('aGroups')">Barchasi →</span></div><div id="aGroupsStatus"></div></div>
+        </div>
+      </div>
+    </div>
+    <div id="aUsers" class="panel">
+      <div class="topbar"><div class="topbar-title">Foydalanuvchilar</div>
+        <div class="topbar-actions">
+          <div class="swrap"><i class="ti ti-search"></i><input type="text" placeholder="Qidirish..." oninput="filterUsers(this.value)" style="width:200px"></div>
+          <button class="btn btn-green" onclick="openImportModal()"><i class="ti ti-file-spreadsheet"></i>Excel import</button>
+          <button class="btn btn-primary" onclick="openAddUserModal()"><i class="ti ti-user-plus"></i>Yangi foydalanuvchi</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card"><div class="card-head"><h3 id="usersTitle">Barcha foydalanuvchilar</h3>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm" onclick="filterByRole('')">Barchasi</button>
+            <button class="btn btn-sm" onclick="filterByRole('admin')">Admin</button>
+            <button class="btn btn-sm" onclick="filterByRole('teacher')">O'qituvchi</button>
+            <button class="btn btn-sm" onclick="filterByRole('student')">Talaba</button>
+          </div>
+        </div>
+        <div class="tw"><table><thead><tr><th>#</th><th>Foydalanuvchi</th><th>Login</th><th>Rol</th><th>Guruh</th><th>Holat</th><th></th></tr></thead><tbody id="usersTable"></tbody></table></div></div>
+      </div>
+    </div>
+    <div id="aGroups" class="panel">
+      <div class="topbar"><div class="topbar-title">Guruhlar</div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" onclick="openAddGroupModal()"><i class="ti ti-plus"></i>Yangi guruh</button>
+        </div>
+      </div>
+      <div class="content" id="aGroupsContent"></div>
+    </div>
+    <div id="aAssigns" class="panel">
+      <div class="topbar"><div class="topbar-title">Barcha topshiriqlar</div></div>
+      <div class="content">
+        <div class="card"><div class="card-head"><h3>Topshiriqlar ro'yxati</h3></div>
+        <div class="tw"><table><thead><tr><th>Nomi</th><th>O'qituvchi</th><th>Guruh</th><th>Muddat</th><th>Topshirilgan</th><th>Holat</th></tr></thead><tbody id="aAssignsTable"></tbody></table></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEACHER LAYOUT -->
+<div id="teacherLayout" class="layout" style="display:none">
+  <div class="sidebar">
+    <div class="sb-brand"><i class="ti ti-school"></i>EduPortal</div>
+    <div class="sb-user">
+      <div class="uname" id="tName"></div>
+      <div class="urole"><i class="ti ti-user-star"></i><span id="tMeta"></span></div>
+    </div>
+    <div class="nav-grp">
+      <div class="nav-lbl">Mening sahifam</div>
+      <div class="nav-item active" data-p="tDash" onclick="tNav(this)"><i class="ti ti-layout-dashboard"></i>Bosh sahifa</div>
+      <div class="nav-item" data-p="tAssign" onclick="tNav(this)"><i class="ti ti-file-text"></i>Topshiriqlar <span class="nbadge blue" id="tAssignBadge">0</span></div>
+      <div class="nav-item" data-p="tSubs" onclick="tNav(this)"><i class="ti ti-inbox"></i>Topshirilganlar <span class="nbadge amber" id="tSubsBadge">0</span></div>
+      <div class="nav-item" data-p="tStudents" onclick="tNav(this)"><i class="ti ti-users"></i>Talabalarim</div>
+      <div class="nav-item" data-p="tGrades" onclick="tNav(this)"><i class="ti ti-certificate"></i>Baholar</div>
+    </div>
+    <div class="sb-footer">
+      <div class="logout-link" onclick="logout()"><i class="ti ti-logout"></i>Chiqish</div>
+    </div>
+  </div>
+  <div class="main">
+    <div id="tDash" class="panel active">
+      <div class="topbar"><div class="topbar-title">Bosh sahifa</div>
+        <div class="topbar-actions"><button class="btn btn-primary" onclick="openNewAssignModal()"><i class="ti ti-plus"></i>Yangi topshiriq</button></div>
+      </div>
+      <div class="content">
+        <div class="stats-row" id="tStats" style="grid-template-columns:repeat(4,1fr)"></div>
+        <div class="card"><div class="card-head"><h3>So'nggi topshirilganlar</h3><span class="lnk" onclick="tNavById('tSubs')">Barchasi →</span></div><div id="tRecentSubs"></div></div>
+        <div class="card"><div class="card-head"><h3>Aktiv topshiriqlar</h3><span class="lnk" onclick="tNavById('tAssign')">Barchasi →</span></div><div id="tActiveAssigns"></div></div>
+      </div>
+    </div>
+    <div id="tAssign" class="panel">
+      <div class="topbar"><div class="topbar-title">Topshiriqlar</div>
+        <div class="topbar-actions"><button class="btn btn-primary" onclick="openNewAssignModal()"><i class="ti ti-plus"></i>Yangi topshiriq</button></div>
+      </div>
+      <div class="content">
+        <div class="card"><div class="card-head"><h3>Barcha topshiriqlar</h3></div>
+        <div class="tw"><table><thead><tr><th>Nomi</th><th>Fan</th><th>Guruh</th><th>Muddat</th><th>Topshirilgan</th><th>Holat</th><th></th></tr></thead><tbody id="tAssignTable"></tbody></table></div></div>
+      </div>
+    </div>
+    <div id="tSubs" class="panel">
+      <div class="topbar"><div class="topbar-title">Topshirilgan ishlar</div>
+        <div class="topbar-actions">
+          <div class="swrap"><i class="ti ti-search"></i><input type="text" placeholder="Qidirish..." oninput="filterTSubs(this.value)" style="width:200px"></div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card"><div class="card-head"><h3>Barcha topshirilganlar</h3></div>
+        <div class="tw"><table><thead><tr><th>Talaba</th><th>Topshiriq</th><th>Yuborilgan</th><th>Fayl</th><th>Holat</th><th>Baho</th><th></th></tr></thead><tbody id="tSubsTable"></tbody></table></div></div>
+      </div>
+    </div>
+    <div id="tStudents" class="panel">
+      <div class="topbar"><div class="topbar-title">Talabalarim</div></div>
+      <div class="content">
+        <div class="card"><div class="card-head"><h3 id="tStudentsTitle">Guruh talabalari</h3></div>
+        <div class="tw"><table><thead><tr><th>#</th><th>F.I.Sh</th><th>Login</th><th>Topshirilgan</th><th>O'rtacha</th><th>Holat</th></tr></thead><tbody id="tStudentsTable"></tbody></table></div></div>
+      </div>
+    </div>
+    <div id="tGrades" class="panel">
+      <div class="topbar"><div class="topbar-title">Baholar jurnali</div></div>
+      <div class="content"><div class="card"><div class="card-head"><h3>Baholar matritsasi</h3></div><div class="tw" id="tGradesMatrix"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- STUDENT LAYOUT -->
+<div id="studentLayout" class="layout" style="display:none">
+  <div class="sidebar">
+    <div class="sb-brand"><i class="ti ti-school"></i>EduPortal</div>
+    <div class="sb-user">
+      <div class="uname" id="sName"></div>
+      <div class="urole"><i class="ti ti-user-check"></i><span id="sMeta"></span></div>
+    </div>
+    <div class="nav-grp">
+      <div class="nav-lbl">Mening sahifam</div>
+      <div class="nav-item active" data-p="sDash" onclick="sNav(this)"><i class="ti ti-layout-dashboard"></i>Bosh sahifa</div>
+      <div class="nav-item" data-p="sAssign" onclick="sNav(this)"><i class="ti ti-file-text"></i>Vazifalar <span class="nbadge amber" id="sPendBadge">0</span></div>
+      <div class="nav-item" data-p="sMyWork" onclick="sNav(this)"><i class="ti ti-inbox"></i>Yuborilganlar</div>
+      <div class="nav-item" data-p="sGrades" onclick="sNav(this)"><i class="ti ti-certificate"></i>Baholarim</div>
+    </div>
+    <div class="sb-footer">
+      <div class="logout-link" onclick="logout()"><i class="ti ti-logout"></i>Chiqish</div>
+    </div>
+  </div>
+  <div class="main">
+    <div id="sDash" class="panel active">
+      <div class="topbar"><div class="topbar-title">Bosh sahifa</div></div>
+      <div class="content">
+        <div class="stats-row" id="sStats" style="grid-template-columns:repeat(4,1fr)"></div>
+        <div class="card"><div class="card-head"><h3>Kutayotgan vazifalar</h3><span class="lnk" onclick="sNavById('sAssign')">Barchasi →</span></div><div id="sPending"></div></div>
+        <div class="card"><div class="card-head"><h3>So'nggi baholar</h3><span class="lnk" onclick="sNavById('sGrades')">Barchasi →</span></div><div id="sRecentGr"></div></div>
+      </div>
+    </div>
+    <div id="sAssign" class="panel">
+      <div class="topbar"><div class="topbar-title">Barcha vazifalar</div></div>
+      <div class="content">
+        <div class="card"><div class="card-head"><h3>Vazifalar ro'yxati</h3></div>
+        <div class="tw"><table><thead><tr><th>Vazifa</th><th>Fan</th><th>O'qituvchi</th><th>Muddat</th><th>Holat</th><th></th></tr></thead><tbody id="sAssignTable"></tbody></table></div></div>
+      </div>
+    </div>
+    <div id="sMyWork" class="panel">
+      <div class="topbar"><div class="topbar-title">Yuborilgan ishlar</div></div>
+      <div class="content">
+        <div class="card"><div class="card-head"><h3>Mening ishlarim</h3></div>
+        <div class="tw"><table><thead><tr><th>Vazifa</th><th>Yuborilgan</th><th>Fayl</th><th>Izoh</th><th>Holat</th><th>Baho</th></tr></thead><tbody id="sWorkTable"></tbody></table></div></div>
+      </div>
+    </div>
+    <div id="sGrades" class="panel">
+      <div class="topbar"><div class="topbar-title">Baholarim</div></div>
+      <div class="content">
+        <div class="stats-row" id="sGrStats" style="grid-template-columns:repeat(3,1fr)"></div>
+        <div class="card"><div class="card-head"><h3>Baho tarixi</h3></div>
+        <div class="tw"><table><thead><tr><th>Vazifa</th><th>Baho</th><th>Foiz</th><th>O'qituvchi izohi</th><th>Sana</th></tr></thead><tbody id="sGrTable"></tbody></table></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div><!-- /app -->
+
+<!-- ===== MODALS ===== -->
+<!-- Add User -->
+<div class="modal-ov" id="addUserModal">
+  <div class="modal">
+    <div class="mhead"><h3 id="addUserTitle">Yangi foydalanuvchi</h3><button class="mclose" onclick="closeM('addUserModal')"><i class="ti ti-x"></i></button></div>
+    <div class="mbody">
+      <div class="fg-row">
+        <div class="fg"><label>Ism *</label><input type="text" id="uFName" placeholder="Ism"></div>
+        <div class="fg"><label>Familiya *</label><input type="text" id="uLName" placeholder="Familiya"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Rol *</label>
+          <select id="uRole" onchange="onRoleChange()">
+            <option value="teacher">O'qituvchi</option>
+            <option value="student">Talaba</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="fg" id="uGroupWrap"><label>Guruh</label>
+          <select id="uGroup"><option value="">— Guruh —</option></select>
+        </div>
+      </div>
+      <div class="fg" id="uSubjectWrap"><label>Fan (o'qituvchi uchun)</label><input type="text" id="uSubject" placeholder="Masalan: Informatika"></div>
+      <div class="fg-row">
+        <div class="fg"><label>Login *</label><input type="text" id="uLogin" placeholder="login123"></div>
+        <div class="fg"><label>Parol *</label>
+          <div style="display:flex;gap:6px">
+            <input type="text" id="uPass" placeholder="parol" style="flex:1">
+            <button class="btn btn-sm" onclick="genPass()" title="Yaratish"><i class="ti ti-refresh"></i></button>
+          </div>
+        </div>
+      </div>
+      <div id="credPreview" style="display:none" class="info-block success">
+        <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:6px"><i class="ti ti-check"></i> Login ma'lumotlari</div>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap">
+          <div><div class="cl">Login</div><span class="cred-val" id="cpLogin"></span></div>
+          <div><div class="cl">Parol</div><span class="cred-val" id="cpPass"></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" onclick="closeM('addUserModal')">Bekor</button>
+      <button class="btn btn-primary" onclick="saveUser()"><i class="ti ti-check"></i>Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Group -->
+<div class="modal-ov" id="addGroupModal">
+  <div class="modal">
+    <div class="mhead"><h3>Yangi guruh</h3><button class="mclose" onclick="closeM('addGroupModal')"><i class="ti ti-x"></i></button></div>
+    <div class="mbody">
+      <div class="fg-row">
+        <div class="fg"><label>Guruh nomi *</label><input type="text" id="gName" placeholder="CS-21"></div>
+        <div class="fg"><label>Yo'nalish</label><input type="text" id="gDept" placeholder="Kompyuter fanlari"></div>
+      </div>
+      <div class="fg"><label>O'qituvchi biriktirish</label><select id="gTeacher"><option value="">— Tanlang —</option></select></div>
+      <div class="fg"><label>Talabalar biriktirish (ko'p tanlash)</label>
+        <div id="gStudentsList" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--rs);padding:6px"></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" onclick="closeM('addGroupModal')">Bekor</button>
+      <button class="btn btn-primary" onclick="saveGroup()"><i class="ti ti-check"></i>Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- Manage Group Members -->
+<div class="modal-ov" id="manageGroupModal">
+  <div class="modal wide">
+    <div class="mhead"><h3 id="mgTitle">Guruhni boshqarish</h3><button class="mclose" onclick="closeM('manageGroupModal')"><i class="ti ti-x"></i></button></div>
+    <div class="mbody">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div>
+          <div class="sdiv">O'qituvchi</div>
+          <div class="fg"><select id="mgTeacher"><option value="">— Tanlang —</option></select></div>
+        </div>
+        <div>
+          <div class="sdiv">Fan</div>
+          <div class="fg"><input type="text" id="mgSubject" placeholder="Fan nomi"></div>
+        </div>
+      </div>
+      <div class="sdiv">Talabalar</div>
+      <div id="mgStudentsList" style="max-height:250px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--rs);padding:8px"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" onclick="closeM('manageGroupModal')">Yopish</button>
+      <button class="btn btn-primary" onclick="saveGroupManage()"><i class="ti ti-check"></i>Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Assignment -->
+<div class="modal-ov" id="newAssignModal">
+  <div class="modal wide">
+    <div class="mhead"><h3>Yangi vazifa</h3><button class="mclose" onclick="closeM('newAssignModal')"><i class="ti ti-x"></i></button></div>
+    <div class="mbody">
+      <div class="fg"><label>Vazifa nomi *</label><input type="text" id="aTit" placeholder="Masalan: Laboratoriya ishi №4"></div>
+      <div class="fg-row">
+        <div class="fg"><label>Fan *</label><input type="text" id="aSub" placeholder="Informatika"></div>
+        <div class="fg"><label>Guruh *</label><select id="aGroup"><option value="">— Guruh —</option></select></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Max baho</label><input type="number" id="aMax" value="100" min="1"></div>
+        <div class="fg"><label>Muddat *</label><input type="date" id="aDue"></div>
+      </div>
+      <div class="fg"><label>Tavsif *</label><textarea id="aDesc" rows="4" placeholder="Topshiriq shartlari..."></textarea></div>
+      <div class="fg"><label>Fayl biriktirish</label>
+        <div class="uzone" id="aFZone" onclick="document.getElementById('aFIn').click()">
+          <i class="ti ti-file-upload" id="aFIco"></i>
+          <p id="aFTxt">Fayl yuklash uchun bosing</p>
+          <span>PDF, DOCX, ZIP — max 50MB</span>
+        </div>
+        <input type="file" id="aFIn" style="display:none" onchange="handleAFile(this)">
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" onclick="closeM('newAssignModal')">Bekor</button>
+      <button class="btn btn-primary" onclick="saveAssign()"><i class="ti ti-send"></i>Yuborish</button>
+    </div>
+  </div>
+</div>
+
+<!-- Grade Modal -->
+<div class="modal-ov" id="gradeModal">
+  <div class="modal wide">
+    <div class="mhead"><h3>Ishni baholash</h3><button class="mclose" onclick="closeM('gradeModal')"><i class="ti ti-x"></i></button></div>
+    <div class="mbody">
+      <div id="gradeInfo" class="info-block"></div>
+      <div class="fg-row">
+        <div class="fg"><label>Baho</label><input type="number" id="gScore" placeholder="85" min="0"><div id="gMaxHint" style="font-size:11px;color:var(--t3);margin-top:3px"></div></div>
+        <div class="fg"><label>Status</label><select id="gStatus"><option value="graded">Baholandi</option><option value="done">Qabul qilindi</option><option value="late">Kech topshirildi</option></select></div>
+      </div>
+      <div class="fg"><label>O'qituvchi izohi</label><textarea id="gComment" rows="3" placeholder="Talabaga izoh..."></textarea></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" onclick="closeM('gradeModal')">Bekor</button>
+      <button class="btn btn-primary" onclick="saveGrade()"><i class="ti ti-check"></i>Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- Submit Modal -->
+<div class="modal-ov" id="submitModal">
+  <div class="modal wide">
+    <div class="mhead"><h3>Vazifa topshirish</h3><button class="mclose" onclick="closeM('submitModal')"><i class="ti ti-x"></i></button></div>
+    <div class="mbody">
+      <div id="submitInfo" class="info-block"></div>
+      <div class="fg"><label>Fayl yuklash *</label>
+        <div class="uzone" id="sFZone" onclick="document.getElementById('sFIn').click()">
+          <i class="ti ti-file-upload" id="sFIco"></i>
+          <p id="sFTxt">Ish faylingizni yuklang</p>
+          <span>PDF, DOCX, ZIP, PNG — max 50MB</span>
+        </div>
+        <input type="file" id="sFIn" style="display:none" onchange="handleSFile(this)">
+      </div>
+      <div class="fg"><label>Izoh (ixtiyoriy)</label><textarea id="sComment" rows="3" placeholder="O'qituvchiga izoh..."></textarea></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" onclick="closeM('submitModal')">Bekor</button>
+      <button class="btn btn-primary" onclick="doSubmit()"><i class="ti ti-send"></i>Yuborish</button>
+    </div>
+  </div>
+</div>
+
+<!-- File Preview -->
+<div class="modal-ov" id="prevModal" style="z-index:150">
+  <div class="modal wide">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:9px"><i class="ti ti-file" style="font-size:18px;color:var(--blue)"></i><h3 id="prevTitle"></h3></div>
+      <div style="display:flex;gap:6px"><button class="btn btn-sm btn-primary" id="prevDlBtn"><i class="ti ti-download"></i>Yuklab olish</button><button class="mclose" onclick="closeM('prevModal')"><i class="ti ti-x"></i></button></div>
+    </div>
+    <div class="mbody" id="prevBody" style="min-height:160px;padding:1rem"></div>
+  </div>
+</div>
+
+<!-- Credential Show -->
+<div class="modal-ov" id="credModal">
+  <div class="modal">
+    <div class="mhead"><h3>Login ma'lumotlari</h3><button class="mclose" onclick="closeM('credModal')"><i class="ti ti-x"></i></button></div>
+    <div class="mbody">
+      <div class="info-block warn"><i class="ti ti-alert-triangle"></i> Bu ma'lumotlarni foydalanuvchiga bering. Parolni keyinchalik ko'rib bo'lmaydi.</div>
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+        <div class="cred-box"><div class="cl">F.I.Sh</div><span class="cred-val" id="cFIO"></span></div>
+        <div class="cred-box"><div class="cl">Rol</div><span class="cred-val" id="cRol"></span></div>
+        <div class="cred-box"><div class="cl">Login</div><span class="cred-val" id="cLog"></span><span class="cred-copy" onclick="copyTxt(this,'cLog')"><i class="ti ti-copy"></i>Nusxa</span></div>
+        <div class="cred-box"><div class="cl">Parol</div><span class="cred-val" id="cPas"></span><span class="cred-copy" onclick="copyTxt(this,'cPas')"><i class="ti ti-copy"></i>Nusxa</span></div>
+      </div>
+    </div>
+    <div class="mfoot"><button class="btn btn-primary" onclick="closeM('credModal')"><i class="ti ti-check"></i>Tayyor</button></div>
+  </div>
+</div>
+
+<!-- ===== EXCEL IMPORT MODAL ===== -->
+<div class="modal-ov" id="importModal">
+  <div class="modal" style="max-width:820px">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:10px">
+        <i class="ti ti-file-spreadsheet" style="font-size:20px;color:var(--green)"></i>
+        <h3>Excel orqali ro'yxatdan o'tkazish</h3>
+      </div>
+      <button class="mclose" onclick="closeM('importModal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="mbody">
+
+      <!-- Step 1: Role + upload -->
+      <div id="impStep1">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div class="fg">
+            <label>Ro'yxatdan o'tkazish turi *</label>
+            <select id="impRole" onchange="updateImpTemplate()">
+              <option value="student">Talabalar</option>
+              <option value="teacher">O'qituvchilar</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Guruh (ixtiyoriy)</label>
+            <select id="impGroup"><option value="">— Guruh tanlanmagan —</option></select>
+          </div>
+        </div>
+
+        <!-- Template download -->
+        <div class="info-block" style="margin-bottom:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+            <div>
+              <strong style="font-size:13px"><i class="ti ti-info-circle"></i> Excel shabloni</strong>
+              <div style="font-size:12px;color:var(--t2);margin-top:3px" id="impTemplateDesc">
+                Talabalar uchun: Familiya, Ism, Login, Parol, Guruh (ixtiyoriy)
+              </div>
+            </div>
+            <button class="btn btn-sm btn-green" onclick="downloadTemplate()">
+              <i class="ti ti-download"></i>Shablon (.xlsx) yuklab olish
+            </button>
+          </div>
+        </div>
+
+        <!-- Upload zone -->
+        <div class="fg">
+          <label>Excel fayl yuklash (.xlsx, .xls, .csv) *</label>
+          <div class="uzone" id="impZone" onclick="document.getElementById('impFileIn').click()" 
+               ondragover="event.preventDefault();this.classList.add('drag')"
+               ondragleave="this.classList.remove('drag')"
+               ondrop="event.preventDefault();this.classList.remove('drag');handleImpFile(event.dataTransfer.files[0])">
+            <i class="ti ti-file-spreadsheet" id="impZoneIco" style="font-size:40px"></i>
+            <p id="impZoneTxt">Excel faylni shu yerga torting yoki bosing</p>
+            <span>.xlsx, .xls, .csv — maksimal 10MB</span>
+          </div>
+          <input type="file" id="impFileIn" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImpFile(this.files[0])">
+        </div>
+      </div>
+
+      <!-- Step 2: Preview -->
+      <div id="impStep2" style="display:none">
+        <div id="impSummaryBar" class="info-block" style="margin-bottom:12px"></div>
+
+        <!-- Errors -->
+        <div id="impErrorBlock" style="display:none;margin-bottom:12px">
+          <div class="info-block warn">
+            <strong><i class="ti ti-alert-triangle"></i> Xatolar aniqlandi — bu qatorlar tashlab ketiladi:</strong>
+            <div id="impErrorList" style="margin-top:8px;max-height:100px;overflow-y:auto;font-size:12px;font-family:'DM Mono',monospace"></div>
+          </div>
+        </div>
+
+        <!-- Duplicates -->
+        <div id="impDupBlock" style="display:none;margin-bottom:12px">
+          <div class="info-block warn">
+            <strong><i class="ti ti-copy"></i> Mavjud loginlar (yangilanadi):</strong>
+            <div id="impDupList" style="margin-top:6px;font-size:12px;font-family:'DM Mono',monospace;max-height:80px;overflow-y:auto"></div>
+          </div>
+        </div>
+
+        <!-- Preview table -->
+        <div style="border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;max-height:320px;overflow-y:auto">
+          <table style="width:100%;border-collapse:collapse">
+            <thead id="impThead" style="position:sticky;top:0;z-index:1"></thead>
+            <tbody id="impTbody"></tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <button class="btn" onclick="resetImport()"><i class="ti ti-arrow-left"></i>Orqaga</button>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span id="impReadyCount" style="font-size:13px;color:var(--t2)"></span>
+            <button class="btn btn-primary" id="impSaveBtn" onclick="importUsers()"><i class="ti ti-user-check"></i>Saqlash</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:500;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:12px;padding:1.5rem 2rem;display:flex;align-items:center;gap:12px;box-shadow:var(--shm)">
+    <div style="width:20px;height:20px;border:2.5px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite"></div>
+    <span style="font-size:14px;color:var(--text)">Yuklanmoqda...</span>
+  </div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+// ============================================================
+// API CONFIG
+// ============================================================
+const API_BASE = 'https://nedu-beta.vercel.app/api';
+let me = null;
+let _token = localStorage.getItem('edu_token') || null;
+
+// ---- HTTP helpers ----
+async function api(method, path, body=null, isForm=false){
+  const headers = {};
+  if(_token) headers['Authorization'] = 'Bearer ' + _token;
+  let bodyData = null;
+  if(body){
+    if(isForm){ bodyData = body; }
+    else { headers['Content-Type'] = 'application/json'; bodyData = JSON.stringify(body); }
+  }
+  const resp = await fetch(API_BASE + path, {method, headers, body:bodyData});
+  if(resp.status === 204) return null;
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok){
+    const msg = data?.detail || 'Xato ' + resp.status;
+    throw new Error(Array.isArray(msg) ? msg.map(e=>e.msg).join('; ') : msg);
+  }
+  return data;
+}
+const GET  = p        => api('GET',    p);
+const POST = (p,b)    => api('POST',   p, b);
+const PATCH= (p,b)    => api('PATCH',  p, b);
+const DEL  = p        => api('DELETE', p);
+const POSTF= (p,b)    => api('POST',   p, b, true);
+
+// ---- Loading overlay ----
+function showLoading(){ document.getElementById('loadingOverlay').style.display='flex'; }
+function hideLoading(){ document.getElementById('loadingOverlay').style.display='none'; }
+
+// ============================================================
+// AUTH
+// ============================================================
+let roleTab = 'admin';
+
+function setRoleTab(r, el){
+  roleTab = r;
+  document.querySelectorAll('.role-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function demoLogin(r){
+  const map = {admin:{u:'admin',p:'admin123'},teacher:{u:'teacher1',p:'teacher123'},student:{u:'student1',p:'student123'}};
+  document.getElementById('loginUser').value = map[r].u;
+  document.getElementById('loginPass').value = map[r].p;
+  doLogin();
+}
+
+async function doLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  const err = document.getElementById('loginErr');
+  err.style.display='none';
+  if(!u || !p){ err.textContent="Login va parolni kiriting"; err.style.display='block'; return; }
+  showLoading();
+  try {
+    const data = await POST('/auth/login', {login:u, password:p});
+    _token = data.access_token;
+    localStorage.setItem('edu_token', _token);
+    me = data.user;
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    if(me.role==='admin') startAdmin();
+    else if(me.role==='teacher') startTeacher();
+    else startStudent();
+  } catch(e) {
+    err.textContent = e.message || "Login yoki parol noto'g'ri";
+    err.style.display='block';
+  } finally { hideLoading(); }
+}
+
+function logout(){
+  me=null; _token=null;
+  localStorage.removeItem('edu_token');
+  document.getElementById('app').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+  ['adminLayout','teacherLayout','studentLayout'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display='none';
+  });
+  resetPanels();
+}
+
+function resetPanels(){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  ['aDash','tDash','sDash'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.add('active');});
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.nav-item:first-of-type').forEach(n=>n.classList.add('active'));
+}
+
+// Auto-login agar token saqlangan bo'lsa
+async function tryAutoLogin(){
+  if(!_token) return;
+  showLoading();
+  try {
+    me = await GET('/auth/me');
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    if(me.role==='admin') startAdmin();
+    else if(me.role==='teacher') startTeacher();
+    else startStudent();
+  } catch(e) {
+    _token=null; localStorage.removeItem('edu_token');
+  } finally { hideLoading(); }
+}
+
+// ============================================================
+// NAV HELPERS
+// ============================================================
+function aNav(el){
+  document.querySelectorAll('#adminLayout .nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#adminLayout .panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById(el.dataset.p).classList.add('active');
+  renderAdminPanel(el.dataset.p);
+}
+function aNavById(id){ const el=document.querySelector(`#adminLayout [data-p="${id}"]`); if(el) aNav(el); }
+
+function tNav(el){
+  document.querySelectorAll('#teacherLayout .nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#teacherLayout .panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById(el.dataset.p).classList.add('active');
+  renderTeacherPanel(el.dataset.p);
+}
+function tNavById(id){ const el=document.querySelector(`#teacherLayout [data-p="${id}"]`); if(el) tNav(el); }
+
+function sNav(el){
+  document.querySelectorAll('#studentLayout .nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#studentLayout .panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById(el.dataset.p).classList.add('active');
+  renderStudentPanel(el.dataset.p);
+}
+function sNavById(id){ const el=document.querySelector(`#studentLayout [data-p="${id}"]`); if(el) sNav(el); }
+
+// ============================================================
+// HELPERS
+// ============================================================
+function gid(){ return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+function fmt(d){ if(!d)return'—'; const dt=new Date(d); return dt.toLocaleDateString('uz-Latn',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+function fmtDT(d){ if(!d)return'—'; const dt=new Date(d),now=new Date(),diff=now-dt;
+  if(diff<60000)return'Hozirgina'; if(diff<3600000)return Math.floor(diff/60000)+' daqiqa oldin';
+  if(diff<86400000)return Math.floor(diff/3600000)+' soat oldin'; return fmt(d); }
+function dueCls(due){ const d=new Date(due),n=new Date(),diff=(d-n)/86400000;
+  if(diff<0)return'due-late'; if(diff<3)return'due-soon'; return'due-ok'; }
+function dueLabel(due){ return `<span class="${dueCls(due)}">${fmt(due)}</span>`; }
+function ava(name,col='blue'){ const p=name.split(' ');const i=p.slice(0,2).map(x=>x[0]||'').join('').toUpperCase(); return `<div class="ava ${col}">${i}</div>`; }
+function rolePill(r){ const m={admin:'Admin',teacher:"O'qituvchi",student:'Talaba'}; return `<span class="pill ${r}">${m[r]||r}</span>`; }
+function pillLbl(s){ const m={pending:'Kutilmoqda',done:'Topshirildi',graded:'Baholandi',late:"Kech top.",active:'Aktiv'}; return m[s]||s; }
+
+function toast(msg,type='ok'){ const t=document.createElement('div'); t.className='toast '+type; t.innerHTML=`<i class="ti ${type==='ok'?'ti-check':'ti-x'}"></i>${msg}`; document.getElementById('toasts').appendChild(t); setTimeout(()=>t.remove(),3000); }
+function openM(id){ document.getElementById(id).classList.add('open'); }
+function closeM(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-ov').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+
+function copyTxt(btn,spanId){ const v=document.getElementById(spanId).textContent; navigator.clipboard.writeText(v).then(()=>{btn.innerHTML='<i class="ti ti-check"></i>Nusxalandi'; setTimeout(()=>{btn.innerHTML='<i class="ti ti-copy"></i>Nusxa';},1500);}); }
+
+function genPass(){ const c='abcdefghijkmnpqrstuvwxyz23456789'; let p=''; for(let i=0;i<8;i++) p+=c[Math.floor(Math.random()*c.length)]; document.getElementById('uPass').value=p; previewCred(); }
+function previewCred(){ const l=document.getElementById('uLogin').value; const p=document.getElementById('uPass').value; const el=document.getElementById('credPreview'); if(l&&p){el.style.display='block';document.getElementById('cpLogin').textContent=l;document.getElementById('cpPass').textContent=p;}else el.style.display='none'; }
+
+// ============================================================
+// ADMIN
+// ============================================================
+async function startAdmin(){
+  document.getElementById('adminLayout').style.display='flex';
+  document.getElementById('adminName').textContent=me.fname+' '+me.lname;
+  showLoading();
+  try {
+    // API dan ma'lumotlarni yuklaymiz
+    const [users, groups, assignments, stats] = await Promise.all([
+      GET('/users/'),
+      GET('/groups/'),
+      GET('/assignments/'),
+      GET('/users/stats'),
+    ]);
+    // db ga saqlaymiz (render funksiyalari uchun)
+    db = {
+      users: users.map(u=>({...u, groupId:u.group_id, pass:'***', subject:u.subject||''})),
+      groups: groups.map(g=>({...g, teacherId:g.teacher_id})),
+      assignments: assignments.map(a=>({...a, teacherId:a.teacher_id, groupId:a.group_id, desc:a.description, maxScore:a.max_score, due:a.due_date, created:a.created_at?.slice(0,10)})),
+      submissions: [],
+      _stats: stats,
+    };
+    updateABadges();
+    renderAdminPanel('aDash');
+  } catch(e) {
+    toast('Ma\'lumot yuklashda xato: ' + e.message, 'err');
+  } finally { hideLoading(); }
+}
+
+function updateABadges(){
+  const s = db._stats || {};
+  document.getElementById('aUsersBadge').textContent = db.users.length;
+  document.getElementById('aGroupsBadge').textContent = db.groups.length;
+  document.getElementById('aAssignsBadge').textContent = db.assignments.length;
+}
+
+function renderAdminPanel(pid){
+  if(pid==='aDash') renderADash();
+  else if(pid==='aUsers') renderAUsers();
+  else if(pid==='aGroups') renderAGroups();
+  else if(pid==='aAssigns') renderAAssigns();
+}
+
+function renderADash(){
+  const admins=db.users.filter(u=>u.role==='admin').length;
+  const teachers=db.users.filter(u=>u.role==='teacher').length;
+  const students=db.users.filter(u=>u.role==='student').length;
+  document.getElementById('aStats').innerHTML=`
+    <div class="stat-card"><div class="sl">Adminlar</div><div class="sv red">${admins}</div></div>
+    <div class="stat-card"><div class="sl">O'qituvchilar</div><div class="sv blue">${teachers}</div></div>
+    <div class="stat-card"><div class="sl">Talabalar</div><div class="sv green">${students}</div></div>
+    <div class="stat-card"><div class="sl">Guruhlar</div><div class="sv amber">${db.groups.length}</div></div>
+  `;
+  // recent users
+  const ru=document.getElementById('aRecentUsers');
+  const last5=[...db.users].reverse().slice(0,5);
+  ru.innerHTML='<div class="tw"><table><thead><tr><th>F.I.Sh</th><th>Login</th><th>Rol</th></tr></thead><tbody>'+
+    last5.map(u=>`<tr><td><div style="display:flex;align-items:center;gap:7px">${ava(u.fname+' '+u.lname,u.role==='admin'?'red':u.role==='teacher'?'blue':'green')}<span>${u.fname} ${u.lname}</span></div></td><td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--t2)">${u.login}</td><td>${rolePill(u.role)}</td></tr>`).join('')+
+  '</tbody></table></div>';
+  // groups status
+  const gs=document.getElementById('aGroupsStatus');
+  gs.innerHTML='<div class="tw"><table><thead><tr><th>Guruh</th><th>O\'qituvchi</th><th>Talabalar</th></tr></thead><tbody>'+
+    db.groups.map(g=>{
+      const t=db.users.find(u=>u.id===g.teacherId);
+      const sc=db.users.filter(u=>u.groupId===g.id&&u.role==='student').length;
+      return`<tr><td><strong>${g.name}</strong><div style="font-size:11px;color:var(--t3)">${g.dept||''}</div></td><td>${t?t.fname+' '+t.lname:'<span style="color:var(--t3)">Biriktirilmagan</span>'}</td><td style="font-family:'DM Mono',monospace">${sc}</td></tr>`;
+    }).join('')+'</tbody></table></div>';
+}
+
+let userFilterTxt='', userFilterRole='';
+function renderAUsers(){
+  let users=db.users;
+  if(userFilterRole) users=users.filter(u=>u.role===userFilterRole);
+  if(userFilterTxt) users=users.filter(u=>(u.fname+' '+u.lname+u.login).toLowerCase().includes(userFilterTxt.toLowerCase()));
+  document.getElementById('usersTitle').textContent=`Foydalanuvchilar (${users.length})`;
+  const body=document.getElementById('usersTable');
+  if(!users.length){body.innerHTML=`<tr><td colspan="7"><div class="empty"><i class="ti ti-users"></i><p>Topilmadi</p></div></td></tr>`;return;}
+  body.innerHTML=users.map((u,i)=>{
+    const g=db.groups.find(x=>x.id===u.groupId);
+    return`<tr>
+      <td>${i+1}</td>
+      <td><div style="display:flex;align-items:center;gap:7px">${ava(u.fname+' '+u.lname,u.role==='admin'?'red':u.role==='teacher'?'blue':'green')}<div><div style="font-weight:500">${u.fname} ${u.lname}</div>${u.subject?`<div style="font-size:11px;color:var(--t3)">${u.subject}</div>`:''}</div></div></td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px">${u.login}</td>
+      <td>${rolePill(u.role)}</td>
+      <td>${g?`<span style="background:var(--gbg);color:var(--gtx);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500">${g.name}</span>`:'<span style="color:var(--t3)">—</span>'}</td>
+      <td><span class="pill active">Aktiv</span></td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-sm" onclick="showCred('${u.id}')" title="Login ma'lumotlari"><i class="ti ti-key"></i></button>
+          <button class="btn btn-sm" onclick="editUserModal('${u.id}')" title="Tahrirlash"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-sm btn-danger" onclick="delUser('${u.id}')" title="O'chirish"><i class="ti ti-trash"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterUsers(v){ userFilterTxt=v; renderAUsers(); }
+function filterByRole(r){ userFilterRole=r; renderAUsers(); }
+
+function renderAGroups(){
+  const c=document.getElementById('aGroupsContent');
+  if(!db.groups.length){c.innerHTML=`<div class="empty" style="margin-top:2rem"><i class="ti ti-building-community"></i><p>Guruhlar yo'q</p><span>Yangi guruh yarating</span></div>`;return;}
+  c.innerHTML=db.groups.map(g=>{
+    const teacher=db.users.find(u=>u.id===g.teacherId);
+    const students=db.users.filter(u=>u.groupId===g.id&&u.role==='student');
+    const assigns=db.assignments.filter(a=>a.groupId===g.id);
+    return`<div class="card">
+      <div class="card-head">
+        <div>
+          <h3>${g.name} <span style="font-weight:400;font-size:13px;color:var(--t2)">${g.dept||''}</span></h3>
+          <div style="font-size:12px;color:var(--t3);margin-top:2px">
+            <i class="ti ti-user-star" style="font-size:13px"></i> ${teacher?teacher.fname+' '+teacher.lname:'Biriktirilmagan'} &nbsp;·&nbsp;
+            <i class="ti ti-users" style="font-size:13px"></i> ${students.length} talaba &nbsp;·&nbsp;
+            <i class="ti ti-file-text" style="font-size:13px"></i> ${assigns.length} topshiriq
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm" onclick="openManageGroup('${g.id}')"><i class="ti ti-settings"></i>Boshqarish</button>
+          <button class="btn btn-sm btn-danger" onclick="delGroup('${g.id}')"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+      <div class="card-body" style="padding:.875rem 1.25rem">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${students.length?students.map(s=>`<div style="display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:4px 10px;font-size:12px">${ava(s.fname+' '+s.lname,'green')}<span>${s.fname} ${s.lname}</span></div>`).join(''):'<span style="font-size:13px;color:var(--t3)">Talabalar biriktirilmagan</span>'}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAAssigns(){
+  const body=document.getElementById('aAssignsTable');
+  if(!db.assignments.length){body.innerHTML=`<tr><td colspan="6"><div class="empty"><i class="ti ti-file-text"></i><p>Topshiriqlar yo'q</p></div></td></tr>`;return;}
+  body.innerHTML=db.assignments.map(a=>{
+    const t=db.users.find(u=>u.id===a.teacherId);
+    const g=db.groups.find(x=>x.id===a.groupId);
+    const sc=db.submissions.filter(s=>s.assignId===a.id).length;
+    const gc=g?db.users.filter(u=>u.groupId===g.id&&u.role==='student').length:1;
+    return`<tr>
+      <td><strong>${a.title}</strong><div style="font-size:11px;color:var(--t3)">${a.subject}</div></td>
+      <td>${t?t.fname+' '+t.lname:'—'}</td>
+      <td>${g?`<span style="background:var(--gbg);color:var(--gtx);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500">${g.name}</span>`:'—'}</td>
+      <td>${dueLabel(a.due)}</td>
+      <td style="font-family:'DM Mono',monospace">${sc}/${gc}</td>
+      <td><span class="pill ${new Date(a.due)>=new Date()?'active':'done'}">${new Date(a.due)>=new Date()?'Aktiv':'Yakunlangan'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// --- ADD USER ---
+let editUserId=null;
+function openAddUserModal(){
+  editUserId=null;
+  document.getElementById('addUserTitle').textContent='Yangi foydalanuvchi';
+  ['uFName','uLName','uLogin','uPass','uSubject'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('uRole').value='teacher';
+  document.getElementById('credPreview').style.display='none';
+  populateGroupSelect('uGroup','');
+  onRoleChange();
+  openM('addUserModal');
+}
+
+function editUserModal(uid){
+  const u=db.users.find(x=>x.id===uid); if(!u) return;
+  editUserId=uid;
+  document.getElementById('addUserTitle').textContent='Foydalanuvchini tahrirlash';
+  document.getElementById('uFName').value=u.fname;
+  document.getElementById('uLName').value=u.lname;
+  document.getElementById('uLogin').value=u.login;
+  document.getElementById('uPass').value=u.pass;
+  document.getElementById('uRole').value=u.role;
+  document.getElementById('uSubject').value=u.subject||'';
+  populateGroupSelect('uGroup',u.groupId||'');
+  document.getElementById('credPreview').style.display='none';
+  onRoleChange();
+  openM('addUserModal');
+}
+
+function onRoleChange(){
+  const r=document.getElementById('uRole').value;
+  document.getElementById('uGroupWrap').style.display=r==='admin'?'none':'block';
+  document.getElementById('uSubjectWrap').style.display=r==='teacher'?'block':'none';
+}
+
+async function saveUser(){
+  const fn=document.getElementById('uFName').value.trim();
+  const ln=document.getElementById('uLName').value.trim();
+  const login=document.getElementById('uLogin').value.trim();
+  const pass=document.getElementById('uPass').value.trim();
+  const role=document.getElementById('uRole').value;
+  const groupId=document.getElementById('uGroup').value||null;
+  const subject=document.getElementById('uSubject').value.trim();
+  if(!fn||!ln||!login||!pass){toast('Majburiy maydonlarni to\'ldiring','err');return;}
+  showLoading();
+  try {
+    if(editUserId){
+      await PATCH('/users/'+editUserId, {fname:fn, lname:ln, password:pass, subject, group_id:groupId});
+      closeM('addUserModal'); toast('Saqlandi!');
+    } else {
+      await POST('/users/', {fname:fn, lname:ln, login, password:pass, role, subject, group_id:groupId});
+      closeM('addUserModal');
+      document.getElementById('cFIO').textContent=fn+' '+ln;
+      document.getElementById('cRol').textContent={admin:'Administrator',teacher:"O'qituvchi",student:'Talaba'}[role];
+      document.getElementById('cLog').textContent=login;
+      document.getElementById('cPas').textContent=pass;
+      openM('credModal');
+      toast('Foydalanuvchi qo\'shildi!');
+    }
+    await startAdmin();
+  } catch(e) {
+    toast(e.message,'err');
+  } finally { hideLoading(); }
+}
+
+function showCred(uid){
+  const u=db.users.find(x=>x.id===uid); if(!u) return;
+  document.getElementById('cFIO').textContent=u.fname+' '+u.lname;
+  document.getElementById('cRol').textContent={admin:'Administrator',teacher:"O'qituvchi",student:'Talaba'}[u.role];
+  document.getElementById('cLog').textContent=u.login;
+  document.getElementById('cPas').textContent='(API dan ko\'rinmaydi)';
+  openM('credModal');
+}
+
+async function delUser(uid){
+  if(uid===me.id){toast("O'zingizni o'chira olmaysiz",'err');return;}
+  if(!confirm('Foydalanuvchini o\'chirishni tasdiqlaysizmi?'))return;
+  showLoading();
+  try {
+    await DEL('/users/'+uid);
+    toast("O'chirildi");
+    await startAdmin();
+  } catch(e){ toast(e.message,'err'); }
+  finally { hideLoading(); }
+}
+
+function populateGroupSelect(selId, selected){
+  const sel=document.getElementById(selId);
+  sel.innerHTML='<option value="">— Guruh —</option>'+db.groups.map(g=>`<option value="${g.id}"${g.id===selected?' selected':''}>${g.name}</option>`).join('');
+}
+
+// --- GROUPS ---
+function openAddGroupModal(){
+  document.getElementById('gName').value='';
+  document.getElementById('gDept').value='';
+  const tsel=document.getElementById('gTeacher');
+  tsel.innerHTML='<option value="">— Tanlang —</option>'+db.users.filter(u=>u.role==='teacher').map(u=>`<option value="${u.id}">${u.fname} ${u.lname}</option>`).join('');
+  const sl=document.getElementById('gStudentsList');
+  const unassigned=db.users.filter(u=>u.role==='student');
+  sl.innerHTML=unassigned.length?unassigned.map(u=>`<label style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:4px;cursor:pointer;font-size:13px"><input type="checkbox" value="${u.id}" style="width:14px;height:14px"> ${ava(u.fname+' '+u.lname,'green')}<span>${u.fname} ${u.lname}</span></label>`).join(''):'<span style="font-size:12px;color:var(--t3)">Talabalar yo\'q</span>';
+  openM('addGroupModal');
+}
+
+let manageGroupId=null;
+function openManageGroup(gid_){
+  manageGroupId=gid_;
+  const g=db.groups.find(x=>x.id===gid_); if(!g) return;
+  document.getElementById('mgTitle').textContent=g.name+' — boshqarish';
+  const tsel=document.getElementById('mgTeacher');
+  const teachers=db.users.filter(u=>u.role==='teacher');
+  tsel.innerHTML='<option value="">— Tanlang —</option>'+teachers.map(u=>`<option value="${u.id}"${u.id===g.teacherId?' selected':''}>${u.fname} ${u.lname}</option>`).join('');
+  document.getElementById('mgSubject').value='';
+  const allStudents=db.users.filter(u=>u.role==='student');
+  const sl=document.getElementById('mgStudentsList');
+  sl.innerHTML=allStudents.length?allStudents.map(u=>{
+    const checked=u.groupId===gid_;
+    return`<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;cursor:pointer;font-size:13px;${checked?'background:var(--gbg)':''}"><input type="checkbox" value="${u.id}" ${checked?'checked':''} style="width:14px;height:14px"> ${ava(u.fname+' '+u.lname,'green')}<span>${u.fname} ${u.lname}</span><span style="font-size:11px;color:var(--t3);margin-left:auto">${u.login}</span></label>`;
+  }).join(''):'<span style="font-size:12px;color:var(--t3)">Talabalar yo\'q</span>';
+  openM('manageGroupModal');
+}
+
+// ============================================================
+// TEACHER
+// ============================================================
+async function startTeacher(){
+  document.getElementById('teacherLayout').style.display='flex';
+  document.getElementById('tName').textContent=me.fname+' '+me.lname;
+  showLoading();
+  try {
+    const [assignments, submissions, groups, users] = await Promise.all([
+      GET('/assignments/'),
+      GET('/submissions/'),
+      GET('/groups/'),
+      GET('/users/?role=student'),
+    ]);
+    // db ga saqlaymiz
+    db = {
+      users: users.map(u=>({...u, groupId:u.group_id, subject:u.subject||''})),
+      groups: groups.map(g=>({...g, teacherId:g.teacher_id})),
+      assignments: assignments.map(a=>({...a, teacherId:a.teacher_id, groupId:a.group_id, desc:a.description, maxScore:a.max_score, due:a.due_date, created:a.created_at?.slice(0,10)})),
+      submissions: submissions.map(s=>({...s, assignId:s.assignment_id, studentId:s.student_id, gradeComment:s.grade_comment, gradedAt:s.graded_at, submittedAt:s.submitted_at, fileUrl:s.file_url})),
+    };
+    me.groupId = me.group_id;
+    const g = db.groups.find(x=>x.id===me.groupId);
+    document.getElementById('tMeta').textContent=(me.subject||"O'qituvchi")+(g?' · '+g.name:'');
+    updateTBadges(); renderTeacherPanel('tDash');
+  } catch(e) {
+    toast('Ma\'lumot yuklashda xato: ' + e.message, 'err');
+  } finally { hideLoading(); }
+}
+
+function updateTBadges(){
+  const myA=db.assignments.filter(a=>a.teacherId===me.id);
+  document.getElementById('tAssignBadge').textContent=myA.length;
+  const pend=db.submissions.filter(s=>myA.find(a=>a.id===s.assignId)&&s.status==='pending').length;
+  document.getElementById('tSubsBadge').textContent=pend||'';
+}
+
+function renderTeacherPanel(pid){
+  if(pid==='tDash') renderTDash();
+  else if(pid==='tAssign') renderTAssign();
+  else if(pid==='tSubs') renderTSubs();
+  else if(pid==='tStudents') renderTStudents();
+  else if(pid==='tGrades') renderTGrades();
+}
+
+function myAssigns(){ return db.assignments.filter(a=>a.teacherId===me.id); }
+function mySubs(){ return db.submissions.filter(s=>myAssigns().find(a=>a.id===s.assignId)); }
+function myStudents(){ return db.users.filter(u=>u.role==='student'&&u.groupId===me.groupId); }
+
+function renderTDash(){
+  const ma=myAssigns(), ms=mySubs(), pend=ms.filter(s=>s.status==='pending').length;
+  const graded=ms.filter(s=>s.grade!=null);
+  const avgs=graded.map(s=>{const a=ma.find(x=>x.id===s.assignId);return a?(s.grade/a.maxScore)*100:0;});
+  const avg=avgs.length?Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length):0;
+  document.getElementById('tStats').innerHTML=`
+    <div class="stat-card"><div class="sl">Topshiriqlar</div><div class="sv blue">${ma.length}</div></div>
+    <div class="stat-card"><div class="sl">Topshirilgan</div><div class="sv green">${ms.length}</div></div>
+    <div class="stat-card"><div class="sl">Baholanmagan</div><div class="sv amber">${pend}</div></div>
+    <div class="stat-card"><div class="sl">O'rtacha</div><div class="sv">${avg}%</div></div>
+  `;
+  // recent subs
+  const rs=document.getElementById('tRecentSubs');
+  const rec=[...ms].sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt)).slice(0,5);
+  if(!rec.length){rs.innerHTML='<div class="empty" style="padding:1.5rem"><i class="ti ti-inbox"></i><p>Hali topshirilmagan</p></div>';return;}
+  rs.innerHTML='<div class="tw"><table><thead><tr><th>Talaba</th><th>Topshiriq</th><th>Vaqt</th><th>Holat</th><th></th></tr></thead><tbody>'+
+    rec.map(s=>{const a=ma.find(x=>x.id===s.assignId),u=db.users.find(x=>x.id===s.studentId);
+      return`<tr><td><div style="display:flex;align-items:center;gap:7px">${ava((u?.fname||'?')+' '+(u?.lname||''),'green')}<span>${u?.fname||'?'} ${u?.lname||''}</span></div></td><td>${a?.title||'—'}</td><td style="font-size:12px;color:var(--t2)">${fmtDT(s.submittedAt)}</td><td><span class="pill ${s.status}">${pillLbl(s.status)}</span></td><td><button class="btn btn-sm btn-primary" onclick="openGradeM('${s.id}')"><i class="ti ti-star"></i>Baholash</button></td></tr>`;
+    }).join('')+'</tbody></table></div>';
+  // active assigns
+  const aa=document.getElementById('tActiveAssigns');
+  const act=ma.filter(a=>new Date(a.due)>=new Date());
+  if(!act.length){aa.innerHTML='<div style="padding:1rem;font-size:13px;color:var(--t3);text-align:center">Aktiv topshiriqlar yo\'q</div>';return;}
+  const stCnt=myStudents().length||1;
+  aa.innerHTML='<div class="tw"><table><thead><tr><th>Topshiriq</th><th>Muddat</th><th>Topshirilgan</th><th>Progress</th></tr></thead><tbody>'+
+    act.map(a=>{const sc=ms.filter(s=>s.assignId===a.id).length;const pct=Math.round(sc/stCnt*100);
+      return`<tr><td><strong>${a.title}</strong><div style="font-size:11px;color:var(--t3)">${a.subject}</div></td><td>${dueLabel(a.due)}</td><td style="font-family:'DM Mono',monospace">${sc}/${stCnt}</td><td style="min-width:100px"><div class="pbar"><div class="pfill" style="width:${pct}%"></div></div><span style="font-size:11px;color:var(--t3)">${pct}%</span></td></tr>`;
+    }).join('')+'</tbody></table></div>';
+}
+
+function renderTAssign(){
+  const ma=myAssigns();
+  const body=document.getElementById('tAssignTable');
+  if(!ma.length){body.innerHTML=`<tr><td colspan="7"><div class="empty"><i class="ti ti-file-plus"></i><p>Topshiriq yaratilmagan</p></div></td></tr>`;return;}
+  const stCnt=myStudents().length||1;
+  body.innerHTML=ma.map(a=>{
+    const sc=db.submissions.filter(s=>s.assignId===a.id).length;
+    const g=db.groups.find(x=>x.id===a.groupId);
+    const isAct=new Date(a.due)>=new Date();
+    return`<tr>
+      <td><strong>${a.title}</strong></td><td>${a.subject}</td>
+      <td>${g?`<span style="background:var(--gbg);color:var(--gtx);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500">${g.name}</span>`:'—'}</td>
+      <td>${dueLabel(a.due)}</td>
+      <td style="font-family:'DM Mono',monospace">${sc}/${stCnt}</td>
+      <td><span class="pill ${isAct?'active':'done'}">${isAct?'Aktiv':'Yakunlangan'}</span></td>
+      <td><button class="btn btn-sm btn-danger" onclick="delAssign('${a.id}')"><i class="ti ti-trash"></i></button></td>
+    </tr>`;
+  }).join('');
+}
+
+let tSubsFilter='';
+function renderTSubs(filter){
+  if(filter!==undefined) tSubsFilter=filter;
+  let subs=mySubs();
+  if(tSubsFilter) subs=subs.filter(s=>{const u=db.users.find(x=>x.id===s.studentId);const a=myAssigns().find(x=>x.id===s.assignId);return (u?.fname+' '+u?.lname+a?.title).toLowerCase().includes(tSubsFilter.toLowerCase());});
+  subs=[...subs].sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt));
+  const body=document.getElementById('tSubsTable');
+  if(!subs.length){body.innerHTML=`<tr><td colspan="7"><div class="empty"><i class="ti ti-inbox"></i><p>Topshirilgan ishlar yo'q</p></div></td></tr>`;return;}
+  body.innerHTML=subs.map(s=>{
+    const u=db.users.find(x=>x.id===s.studentId);
+    const a=myAssigns().find(x=>x.id===s.assignId);
+    return`<tr>
+      <td><div style="display:flex;align-items:center;gap:7px">${ava((u?.fname||'?')+' '+(u?.lname||''),'green')}<span>${u?.fname||'?'} ${u?.lname||''}</span></div></td>
+      <td>${a?.title||'—'}</td>
+      <td style="font-size:12px;color:var(--t2)">${fmtDT(s.submittedAt)}</td>
+      <td>${s.fileName?`<div style="display:flex;align-items:center;gap:5px"><span class="ftag" title="${s.fileName}"><i class="ti ti-file"></i>${s.fileName}</span><button class="btn btn-sm" onclick="prevFile('${s.id}')" title="Ko'rish" style="padding:3px 6px"><i class="ti ti-eye" style="font-size:13px"></i></button><button class="btn btn-sm" onclick="dlFile('${s.id}')" title="Yuklab olish" style="padding:3px 6px"><i class="ti ti-download" style="font-size:13px"></i></button></div>`:'<span style="color:var(--t3)">—</span>'}</td>
+      <td><span class="pill ${s.status}">${pillLbl(s.status)}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-weight:600">${s.grade!=null?s.grade+'/'+(a?.maxScore||100):'—'}</td>
+      <td><button class="btn btn-sm btn-primary" onclick="openGradeM('${s.id}')">${s.status==='pending'?'<i class="ti ti-star"></i> Baholash':'<i class="ti ti-edit"></i> Tahrir'}</button></td>
+    </tr>`;
+  }).join('');
+}
+function filterTSubs(v){ renderTSubs(v); }
+
+function renderTStudents(){
+  const sts=myStudents();
+  const ma=myAssigns();
+  const g=db.groups.find(x=>x.id===me.groupId);
+  document.getElementById('tStudentsTitle').textContent=(g?g.name+' guruhi':'')+' ('+sts.length+' nafar)';
+  const body=document.getElementById('tStudentsTable');
+  if(!sts.length){body.innerHTML=`<tr><td colspan="6"><div class="empty"><i class="ti ti-users"></i><p>Talabalar yo'q</p></div></td></tr>`;return;}
+  body.innerHTML=sts.map((st,i)=>{
+    const ss=db.submissions.filter(s=>s.studentId===st.id&&ma.find(a=>a.id===s.assignId));
+    const gr=ss.filter(s=>s.grade!=null);
+    const avgs=gr.map(s=>{const a=ma.find(x=>x.id===s.assignId);return a?(s.grade/a.maxScore)*100:0;});
+    const avg=avgs.length?Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length):null;
+    const st_=avg==null?'pending':avg>=60?'active':'late';
+    return`<tr>
+      <td>${i+1}</td>
+      <td><div style="display:flex;align-items:center;gap:7px">${ava(st.fname+' '+st.lname,'green')}<strong>${st.fname} ${st.lname}</strong></div></td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--t2)">${st.login}</td>
+      <td style="font-family:'DM Mono',monospace">${ss.length}/${ma.length}</td>
+      <td style="font-family:'DM Mono',monospace;font-weight:600">${avg!=null?avg+'%':'—'}</td>
+      <td><span class="pill ${st_}">${st_==='active'?'Yaxshi':st_==='late'?'Muammo':'Yangi'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTGrades(){
+  const ma=myAssigns(), sts=myStudents();
+  const el=document.getElementById('tGradesMatrix');
+  if(!ma.length||!sts.length){el.innerHTML='<div class="empty" style="padding:2rem"><i class="ti ti-table"></i><p>Ma\'lumot yo\'q</p></div>';return;}
+  const hdr=`<table><thead><tr><th>Talaba</th>${ma.map(a=>`<th style="max-width:100px;font-size:10px">${a.title}</th>`).join('')}<th>O'rtacha</th></tr></thead><tbody>`;
+  const rows=sts.map(st=>{
+    const cells=ma.map(a=>{
+      const s=db.submissions.find(x=>x.assignId===a.id&&x.studentId===st.id);
+      if(!s)return'<td style="text-align:center;color:var(--t3)">—</td>';
+      if(s.grade==null)return`<td style="text-align:center"><span class="pill pending" style="font-size:10px">Kut.</span></td>`;
+      const p=Math.round(s.grade/a.maxScore*100);
+      const c=p>=80?'var(--green)':p>=60?'var(--amber)':'var(--red)';
+      return`<td style="text-align:center;font-family:'DM Mono',monospace;font-weight:600;color:${c}">${s.grade}</td>`;
+    }).join('');
+    const scrs=ma.map(a=>{const s=db.submissions.find(x=>x.assignId===a.id&&x.studentId===st.id);return(s&&s.grade!=null)?{g:s.grade,m:a.maxScore}:null;}).filter(Boolean);
+    const avg=scrs.length?Math.round(scrs.reduce((a,b)=>a+b.g/b.m*100,0)/scrs.length):null;
+    return`<tr><td><div style="display:flex;align-items:center;gap:7px">${ava(st.fname+' '+st.lname,'green')}<span>${st.fname} ${st.lname}</span></div></td>${cells}<td style="text-align:center;font-weight:600;font-family:'DM Mono',monospace">${avg!=null?avg+'%':'—'}</td></tr>`;
+  }).join('');
+  el.innerHTML=hdr+rows+'</tbody></table>';
+}
+
+// -- New Assign --
+let aFileData=null;
+function openNewAssignModal(){
+  aFileData=null;
+  ['aTit','aSub','aDesc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('aMax').value='100';
+  document.getElementById('aDue').value='';
+  document.getElementById('aFZone').className='uzone';
+  document.getElementById('aFIco').className='ti ti-file-upload';
+  document.getElementById('aFTxt').textContent='Fayl yuklash uchun bosing';
+  // populate group select with teacher's group
+  const sel=document.getElementById('aGroup');
+  sel.innerHTML='<option value="">— Guruh —</option>'+db.groups.map(g=>`<option value="${g.id}"${g.id===me.groupId?' selected':''}>${g.name}</option>`).join('');
+  document.getElementById('aSub').value=me.subject||'';
+  openM('newAssignModal');
+}
+function handleAFile(inp){
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=e=>{aFileData={name:f.name,data:e.target.result};document.getElementById('aFTxt').textContent=f.name;document.getElementById('aFZone').className='uzone chosen';document.getElementById('aFIco').className='ti ti-file-check';};r.readAsDataURL(f);
+}
+async function saveAssign(){
+  const title=document.getElementById('aTit').value.trim();
+  const sub=document.getElementById('aSub').value.trim();
+  const due=document.getElementById('aDue').value;
+  const desc=document.getElementById('aDesc').value.trim();
+  const gid_=document.getElementById('aGroup').value;
+  if(!title||!sub||!due||!desc||!gid_){toast('Majburiy maydonlarni to\'ldiring','err');return;}
+  showLoading();
+  try {
+    const form = new FormData();
+    form.append('title', title);
+    form.append('subject', sub);
+    form.append('description', desc);
+    form.append('max_score', document.getElementById('aMax').value||100);
+    form.append('due_date', due);
+    form.append('group_id', gid_);
+    if(aFileData) {
+      // base64 ni File ga o'tkazish
+      const resp = await fetch(aFileData.data);
+      const blob = await resp.blob();
+      form.append('file', blob, aFileData.name);
+    }
+    await POSTF('/assignments/', form);
+    closeM('newAssignModal');
+    toast('Vazifa yaratildi!');
+    await startTeacher();
+    tNavById('tAssign');
+  } catch(e){ toast(e.message,'err'); }
+  finally { hideLoading(); }
+}
+async function delAssign(id){
+  if(!confirm('Topshiriqni o\'chirishni tasdiqlaysizmi?'))return;
+  showLoading();
+  try {
+    await DEL('/assignments/'+id);
+    toast("O'chirildi");
+    await startTeacher();
+  } catch(e){ toast(e.message,'err'); }
+  finally { hideLoading(); }
+}
+
+// -- Grade --
+let gradeSubId=null;
+function openGradeM(subId){
+  gradeSubId=subId;
+  const s=db.submissions.find(x=>x.id===subId); if(!s) return;
+  const a=db.assignments.find(x=>x.id===s.assignId);
+  const u=db.users.find(x=>x.id===s.studentId);
+  document.getElementById('gradeInfo').innerHTML=`
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">${ava((u?.fname||'?')+' '+(u?.lname||''),'green')}<div><strong>${u?.fname||'?'} ${u?.lname||''}</strong><div style="font-size:12px;color:var(--t3)">${fmtDT(s.submittedAt)}</div></div></div>
+    <div style="font-size:13px;color:var(--t2);margin-bottom:8px"><i class="ti ti-file-text" style="font-size:13px;vertical-align:-2px"></i> ${a?.title||'—'} · ${a?.subject||''}</div>
+    ${s.fileName?`<div style="display:flex;align-items:center;gap:7px;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs)">
+      <i class="ti ti-file" style="font-size:20px;color:var(--blue);flex-shrink:0"></i>
+      <div style="flex:1;min-width:0;overflow:hidden"><div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.fileName}</div><div style="font-size:11px;color:var(--t3)">Talaba fayli</div></div>
+      <button class="btn btn-sm" onclick="prevFile('${s.id}')"><i class="ti ti-eye"></i>Ko'rish</button>
+      <button class="btn btn-sm btn-primary" onclick="dlFile('${s.id}')"><i class="ti ti-download"></i>Yuklab olish</button>
+    </div>`:'<div style="font-size:12px;color:var(--t3)"><i class="ti ti-alert-circle"></i> Fayl yuklanmagan</div>'}
+    ${s.comment?`<div style="margin-top:8px;padding:8px 10px;background:var(--abg);border:1px solid #fde68a;border-radius:var(--rs);font-size:12px;color:var(--atx)"><strong>Talaba izohi:</strong> ${s.comment}</div>`:''}
+  `;
+  document.getElementById('gMaxHint').textContent='Max: '+(a?.maxScore||100);
+  document.getElementById('gScore').max=a?.maxScore||100;
+  document.getElementById('gScore').value=s.grade!=null?s.grade:'';
+  document.getElementById('gComment').value=s.gradeComment||'';
+  document.getElementById('gStatus').value=s.status==='pending'?'graded':s.status;
+  openM('gradeModal');
+}
+async function saveGrade(){
+  const score=parseInt(document.getElementById('gScore').value);
+  if(isNaN(score)||score<0){toast('Bahoni kiriting','err');return;}
+  const s=db.submissions.find(x=>x.id===gradeSubId); if(!s) return;
+  const a=db.assignments.find(x=>x.id===s.assignId);
+  if(a&&score>a.maxScore){toast('Max bahoni oshib ketdi','err');return;}
+  showLoading();
+  try {
+    await PATCH('/submissions/'+gradeSubId+'/grade', {
+      grade: score,
+      grade_comment: document.getElementById('gComment').value.trim(),
+      status: document.getElementById('gStatus').value,
+    });
+    closeM('gradeModal'); toast('Baho saqlandi!');
+    await startTeacher();
+  } catch(e){ toast(e.message,'err'); }
+  finally { hideLoading(); }
+}
+
+// -- File --
+function dlFile(subId){
+  const s=db.submissions.find(x=>x.id===subId);
+  if(!s) return;
+  // Supabase Storage URL dan yuklab olish
+  if(s.fileUrl || s.file_url) {
+    const url = s.fileUrl || s.file_url;
+    const a=document.createElement('a'); a.href=url; a.download=s.fileName||'fayl'; a.target='_blank';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  } else if(s.fileData) {
+    const a=document.createElement('a'); a.href=s.fileData; a.download=s.fileName||'fayl';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  } else { toast('Fayl mavjud emas','err'); }
+}
+function prevFile(subId){
+  const s=db.submissions.find(x=>x.id===subId);
+  if(!s){toast('Fayl topilmadi','err');return;}
+  const fileUrl = s.fileUrl || s.file_url || s.fileData;
+  if(!fileUrl){toast('Fayl mavjud emas','err');return;}
+  document.getElementById('prevTitle').textContent=s.fileName||'Fayl';
+  document.getElementById('prevDlBtn').onclick=()=>dlFile(subId);
+  const ext=(s.fileName||'').split('.').pop().toLowerCase();
+  const imgs=['png','jpg','jpeg','gif','webp','svg','bmp'];
+  const body=document.getElementById('prevBody');
+  if(imgs.includes(ext)) body.innerHTML=`<img src="${fileUrl}" style="max-width:100%;max-height:65vh;border-radius:8px;display:block;margin:0 auto">`;
+  else if(ext==='pdf') body.innerHTML=`<iframe src="${fileUrl}" style="width:100%;height:65vh;border:none;border-radius:8px"></iframe>`;
+  else body.innerHTML=`<div style="text-align:center;padding:2.5rem"><i class="ti ti-file-download" style="font-size:48px;display:block;margin-bottom:14px;color:var(--blue)"></i><p style="font-weight:500;margin-bottom:6px">${s.fileName||'Fayl'}</p><button class="btn btn-primary" onclick="dlFile('${subId}')"><i class="ti ti-download"></i>Yuklab olish</button></div>`;
+  openM('prevModal');
+}
+  const ext=(s.fileName||'').split('.').pop().toLowerCase();
+  const imgs=['png','jpg','jpeg','gif','webp','svg','bmp'];
+  const body=document.getElementById('prevBody');
+
+// ============================================================
+// STUDENT
+// ============================================================
+async function startStudent(){
+  document.getElementById('studentLayout').style.display='flex';
+  document.getElementById('sName').textContent=me.fname+' '+me.lname;
+  showLoading();
+  try {
+    const [assignments, submissions, groups] = await Promise.all([
+      GET('/assignments/'),
+      GET('/submissions/'),
+      GET('/groups/'),
+    ]);
+    db = {
+      users: [],
+      groups: groups.map(g=>({...g, teacherId:g.teacher_id})),
+      assignments: assignments.map(a=>({...a, teacherId:a.teacher_id, groupId:a.group_id, desc:a.description, maxScore:a.max_score, due:a.due_date, created:a.created_at?.slice(0,10)})),
+      submissions: submissions.map(s=>({...s, assignId:s.assignment_id, studentId:s.student_id, gradeComment:s.grade_comment, gradedAt:s.graded_at, submittedAt:s.submitted_at, fileUrl:s.file_url,
+        // student detail from nested
+        studentName: s.student ? s.student.fname+' '+s.student.lname : ''})),
+    };
+    me.groupId = me.group_id;
+    const g = db.groups.find(x=>x.id===me.groupId);
+    const t = g && g.teacher_id ? {fname:'O\'qituvchi', lname:''} : null;
+    document.getElementById('sMeta').textContent=(g?g.name:'Guruh yo\'q');
+    renderStudentPanel('sDash');
+  } catch(e) {
+    toast('Ma\'lumot yuklashda xato: ' + e.message, 'err');
+  } finally { hideLoading(); }
+}
+
+function sAssigns(){ return db.assignments.filter(a=>a.groupId===me.groupId); }
+function sSubs(){ return db.submissions.filter(s=>s.studentId===me.id); }
+
+function renderStudentPanel(pid){
+  if(pid==='sDash') renderSDash();
+  else if(pid==='sAssign') renderSAssign();
+  else if(pid==='sMyWork') renderSMyWork();
+  else if(pid==='sGrades') renderSGrades();
+}
+
+function renderSDash(){
+  const all=sAssigns(), sub=sSubs();
+  const pend=all.filter(a=>!sub.find(s=>s.assignId===a.id));
+  const gr=sub.filter(s=>s.grade!=null);
+  const avgs=gr.map(s=>{const a=all.find(x=>x.id===s.assignId);return a?(s.grade/a.maxScore)*100:0;});
+  const avg=avgs.length?Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length):0;
+  document.getElementById('sPendBadge').textContent=pend.length||'';
+  document.getElementById('sStats').innerHTML=`
+    <div class="stat-card"><div class="sl">Jami vazifalar</div><div class="sv blue">${all.length}</div></div>
+    <div class="stat-card"><div class="sl">Topshirilgan</div><div class="sv green">${sub.length}</div></div>
+    <div class="stat-card"><div class="sl">Kutilmoqda</div><div class="sv amber">${pend.length}</div></div>
+    <div class="stat-card"><div class="sl">O'rtacha baho</div><div class="sv">${avg}%</div></div>
+  `;
+  const pe=document.getElementById('sPending');
+  if(!pend.length){pe.innerHTML='<div class="empty" style="padding:1.5rem"><i class="ti ti-circle-check"></i><p>Barcha vazifalar topshirildi</p></div>';}
+  else pe.innerHTML='<div class="tw"><table><thead><tr><th>Vazifa</th><th>Fan</th><th>Muddat</th><th></th></tr></thead><tbody>'+
+    pend.map(a=>`<tr><td><strong>${a.title}</strong></td><td>${a.subject}</td><td>${dueLabel(a.due)}</td><td><button class="btn btn-sm btn-primary" onclick="openSubmitM('${a.id}')"><i class="ti ti-send"></i>Topshirish</button></td></tr>`).join('')+'</tbody></table></div>';
+
+  const rg=document.getElementById('sRecentGr');
+  const recGr=[...gr].sort((a,b)=>new Date(b.gradedAt)-new Date(a.gradedAt)).slice(0,4);
+  if(!recGr.length){rg.innerHTML='<div style="padding:1rem;font-size:13px;color:var(--t3);text-align:center">Baholar yo\'q</div>';return;}
+  rg.innerHTML='<div class="tw"><table><thead><tr><th>Vazifa</th><th>Baho</th><th>Izoh</th><th>Sana</th></tr></thead><tbody>'+
+    recGr.map(s=>{const a=all.find(x=>x.id===s.assignId);const p=a?Math.round(s.grade/a.maxScore*100):0;const c=p>=80?'var(--green)':p>=60?'var(--amber)':'var(--red)';
+      return`<tr><td>${a?.title||'—'}</td><td style="font-family:'DM Mono',monospace;font-weight:600;color:${c}">${s.grade}/${a?.maxScore||100}</td><td style="font-size:12px;color:var(--t2)">${s.gradeComment||'—'}</td><td style="font-size:12px;color:var(--t3)">${fmt(s.gradedAt)}</td></tr>`;
+    }).join('')+'</tbody></table></div>';
+}
+
+function renderSAssign(){
+  const all=sAssigns(), sub=sSubs();
+  const body=document.getElementById('sAssignTable');
+  if(!all.length){body.innerHTML=`<tr><td colspan="6"><div class="empty"><i class="ti ti-file-text"></i><p>Vazifalar yo'q</p></div></td></tr>`;return;}
+  body.innerHTML=all.map(a=>{
+    const s=sub.find(x=>x.assignId===a.id);
+    const t=db.users.find(u=>u.id===a.teacherId);
+    const status=!s?'pending':s.status;
+    return`<tr>
+      <td><strong>${a.title}</strong><div style="font-size:11px;color:var(--t3);margin-top:2px">${a.desc.slice(0,60)}${a.desc.length>60?'...':''}</div>${a.fileName?`<div style="margin-top:4px"><span class="ftag" style="font-size:11px"><i class="ti ti-file"></i>${a.fileName} (o'qituvchi)</span></div>`:''}</td>
+      <td>${a.subject}</td>
+      <td>${t?t.fname+' '+t.lname:'—'}</td>
+      <td>${dueLabel(a.due)}</td>
+      <td><span class="pill ${status}">${pillLbl(status)}</span></td>
+      <td>${!s?`<button class="btn btn-sm btn-primary" onclick="openSubmitM('${a.id}')"><i class="ti ti-send"></i>Topshirish</button>`:
+        s.grade!=null?`<span style="font-family:'DM Mono',monospace;font-weight:600;color:var(--green)">${s.grade}/${a.maxScore}</span>`:'<span style="font-size:12px;color:var(--t3)">Baholanmoqda...</span>'
+      }</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderSMyWork(){
+  const sub=sSubs(), all=sAssigns();
+  const body=document.getElementById('sWorkTable');
+  if(!sub.length){body.innerHTML=`<tr><td colspan="6"><div class="empty"><i class="ti ti-inbox"></i><p>Hali ish topshirilmagan</p></div></td></tr>`;return;}
+  body.innerHTML=[...sub].sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt)).map(s=>{
+    const a=all.find(x=>x.id===s.assignId);
+    return`<tr>
+      <td>${a?.title||'—'}</td>
+      <td style="font-size:12px;color:var(--t2)">${fmtDT(s.submittedAt)}</td>
+      <td>${s.fileName?`<div style="display:flex;align-items:center;gap:5px"><span class="ftag" title="${s.fileName}"><i class="ti ti-file"></i>${s.fileName}</span><button class="btn btn-sm" onclick="prevFile('${s.id}')" style="padding:3px 6px"><i class="ti ti-eye" style="font-size:13px"></i></button><button class="btn btn-sm" onclick="dlFile('${s.id}')" style="padding:3px 6px"><i class="ti ti-download" style="font-size:13px"></i></button></div>`:'—'}</td>
+      <td style="font-size:12px;color:var(--t2);max-width:120px">${s.comment||'—'}</td>
+      <td><span class="pill ${s.status}">${pillLbl(s.status)}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-weight:600">${s.grade!=null?s.grade+'/'+(a?.maxScore||100):'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderSGrades(){
+  const sub=sSubs().filter(s=>s.grade!=null), all=sAssigns();
+  const avgs=sub.map(s=>{const a=all.find(x=>x.id===s.assignId);return a?(s.grade/a.maxScore)*100:0;});
+  const avg=avgs.length?Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length):0;
+  const best=avgs.length?Math.round(Math.max(...avgs)):0;
+  document.getElementById('sGrStats').innerHTML=`
+    <div class="stat-card"><div class="sl">O'rtacha baho</div><div class="sv blue">${avg}%</div></div>
+    <div class="stat-card"><div class="sl">Eng yuqori</div><div class="sv green">${best}%</div></div>
+    <div class="stat-card"><div class="sl">Baholangan</div><div class="sv">${sub.length}/${all.length}</div></div>
+  `;
+  const body=document.getElementById('sGrTable');
+  if(!sub.length){body.innerHTML=`<tr><td colspan="5"><div class="empty"><i class="ti ti-certificate"></i><p>Baholar yo'q</p></div></td></tr>`;return;}
+  body.innerHTML=[...sub].sort((a,b)=>new Date(b.gradedAt)-new Date(a.gradedAt)).map(s=>{
+    const a=all.find(x=>x.id===s.assignId);
+    const p=a?Math.round(s.grade/a.maxScore*100):0;
+    const c=p>=80?'var(--green)':p>=60?'var(--amber)':'var(--red)';
+    return`<tr>
+      <td>${a?.title||'—'}</td>
+      <td style="font-family:'DM Mono',monospace;font-weight:600;color:${c}">${s.grade}/${a?.maxScore||100}</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="pbar" style="width:70px"><div class="pfill" style="width:${p}%;background:${c}"></div></div><span style="font-size:12px;font-weight:500;color:${c}">${p}%</span></div></td>
+      <td style="font-size:12px;color:var(--t2)">${s.gradeComment||'—'}</td>
+      <td style="font-size:12px;color:var(--t3)">${fmt(s.gradedAt)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// -- Submit --
+let sFileObj=null, sFileData=null, submitAId=null;
+function openSubmitM(aId){
+  submitAId=aId;
+  const a=db.assignments.find(x=>x.id===aId); if(!a) return;
+  document.getElementById('submitInfo').innerHTML=`<strong>${a.title}</strong><br><span style="font-size:12px;color:var(--t2)">${a.subject} · Muddat: ${fmt(a.due)}</span><div style="margin-top:7px;font-size:13px">${a.desc}</div>`;
+  sFileObj=null; sFileData=null;
+  document.getElementById('sFZone').className='uzone'; document.getElementById('sFIco').className='ti ti-file-upload'; document.getElementById('sFTxt').textContent='Ish faylingizni yuklang'; document.getElementById('sComment').value='';
+  openM('submitModal');
+}
+function handleSFile(inp){
+  const f=inp.files[0]; if(!f) return;
+  sFileObj=f; sFileData={name:f.name};
+  document.getElementById('sFTxt').textContent=f.name;
+  document.getElementById('sFZone').className='uzone chosen';
+  document.getElementById('sFIco').className='ti ti-file-check';
+}
+async function doSubmit(){
+  if(!sFileObj){toast('Fayl yuklang','err');return;}
+  const exist=db.submissions.find(s=>s.assignId===submitAId&&s.studentId===me.id);
+  if(exist){toast('Bu vazifa allaqachon topshirilgan','err');return;}
+  showLoading();
+  try {
+    const form = new FormData();
+    form.append('assignment_id', submitAId);
+    form.append('comment', document.getElementById('sComment').value.trim());
+    form.append('file', sFileObj);
+    await POSTF('/submissions/', form);
+    closeM('submitModal'); toast('Vazifa muvaffaqiyatli yuborildi! ✓');
+    await startStudent();
+    sNavById('sDash');
+  } catch(e){ toast(e.message,'err'); }
+  finally { hideLoading(); }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+let db = { users:[], groups:[], assignments:[], submissions:[] };
+tryAutoLogin();
+</script>
+
+<!-- SheetJS for Excel parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+// ============================================================
+// EXCEL IMPORT
+// ============================================================
+
+let impParsed = []; // valid rows ready to import
+let impErrors = []; // invalid rows
+let impDups   = []; // logins that already exist
+
+function openImportModal() {
+  resetImport();
+  // populate group select
+  const sel = document.getElementById('impGroup');
+  sel.innerHTML = '<option value="">— Guruh tanlanmagan —</option>' +
+    db.groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+  updateImpTemplate();
+  openM('importModal');
+}
+
+function updateImpTemplate() {
+  const role = document.getElementById('impRole').value;
+  const desc = document.getElementById('impTemplateDesc');
+  if (role === 'teacher') {
+    desc.textContent = "O'qituvchilar uchun: Familiya, Ism, Login, Parol, Fan (ixtiyoriy)";
+  } else {
+    desc.textContent = "Talabalar uchun: Familiya, Ism, Login, Parol, Guruh (ixtiyoriy)";
+  }
+}
+
+// ---- Template download ----
+function downloadTemplate() {
+  const role = document.getElementById('impRole').value;
+  const isTeacher = role === 'teacher';
+
+  if (typeof XLSX === 'undefined') { toast('SheetJS yuklanmadi, internet bor-yo\'qligini tekshiring', 'err'); return; }
+
+  const wb = XLSX.utils.book_new();
+  // Header row
+  const headers = isTeacher
+    ? ['Familiya', 'Ism', 'Login', 'Parol', 'Fan']
+    : ['Familiya', 'Ism', 'Login', 'Parol', 'Guruh'];
+  // Sample rows
+  const sample = isTeacher
+    ? [
+        ['Abdullayev', 'Ulugbek', 'teacher01', 'pass1234', 'Informatika'],
+        ['Karimova',   'Nilufar',  'teacher02', 'pass5678', 'Matematika'],
+      ]
+    : [
+        ['Yusupov', 'Jasur',  'student01', 'pass1234', 'CS-21'],
+        ['Nazarova','Malika', 'student02', 'pass5678', 'CS-21'],
+      ];
+
+  const wsData = [headers, ...sample];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Column widths
+  ws['!cols'] = [16,14,14,12,16].map(w=>({wch:w}));
+
+  // Style header bold (openpyxl-style not needed — just mark with comment)
+  XLSX.utils.book_append_sheet(wb, ws, isTeacher ? "Oqituvchilar" : "Talabalar");
+
+  // Instructions sheet
+  const inst = XLSX.utils.aoa_to_sheet([
+    ['Ko\'rsatmalar'],
+    [''],
+    ['1. Birinchi qator — sarlavha (o\'zgartirmang)'],
+    ['2. Har bir qatorda bitta foydalanuvchi'],
+    ['3. Login va Parol majburiy, takrorlanmasin'],
+    ['4. Guruh nomi (Talabalar uchun) — tizimda mavjud bo\'lishi kerak'],
+    ['5. Fan (O\'qituvchilar uchun) — ixtiyoriy'],
+    ['6. Bo\'sh qatorlarni tashlab keting'],
+  ]);
+  XLSX.utils.book_append_sheet(wb, inst, "Ko'rsatmalar");
+
+  XLSX.writeFile(wb, isTeacher ? 'oqituvchilar_shablon.xlsx' : 'talabalar_shablon.xlsx');
+  toast('Shablon yuklab olindi!');
+}
+
+// ---- Handle file upload ----
+function handleImpFile(file) {
+  if (!file) return;
+  if (!['xlsx','xls','csv'].includes(file.name.split('.').pop().toLowerCase())) {
+    toast('Faqat .xlsx, .xls yoki .csv fayllar qabul qilinadi', 'err'); return;
+  }
+  if (file.size > 10 * 1024 * 1024) { toast('Fayl 10MB dan katta bo\'lmasin', 'err'); return; }
+
+  if (typeof XLSX === 'undefined') { toast('SheetJS hali yuklanmadi, bir oz kuting', 'err'); return; }
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array', cellText: true, cellDates: false });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+      parseImportRows(rows, file.name);
+    } catch(err) {
+      toast('Faylni o\'qishda xato: ' + err.message, 'err');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ---- Parse rows ----
+function parseImportRows(rows, fileName) {
+  if (!rows || rows.length < 2) { toast('Fayl bo\'sh yoki ma\'lumot yo\'q', 'err'); return; }
+
+  const role = document.getElementById('impRole').value;
+  const defaultGroupId = document.getElementById('impGroup').value || null;
+
+  // Detect header row (skip it)
+  const header = rows[0].map(h => String(h).toLowerCase().trim());
+  // Find column indices flexibly
+  const colIdx = {
+    lname : findCol(header, ['familiya','last','lastname','surname','фамилия']),
+    fname : findCol(header, ['ism','first','firstname','имя','name']),
+    login : findCol(header, ['login','username','логин']),
+    pass  : findCol(header, ['parol','password','пароль','pass']),
+    extra : findCol(header, ['fan','guruh','subject','group','фан','гурух']),
+  };
+
+  // Fallback: positional (Familiya=0, Ism=1, Login=2, Parol=3, Extra=4)
+  if (colIdx.lname < 0) colIdx.lname = 0;
+  if (colIdx.fname < 0) colIdx.fname = 1;
+  if (colIdx.login < 0) colIdx.login = 2;
+  if (colIdx.pass  < 0) colIdx.pass  = 3;
+  if (colIdx.extra < 0) colIdx.extra = 4;
+
+  impParsed = []; impErrors = []; impDups = [];
+  const seenLogins = new Set();
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (row.every(c => String(c).trim() === '')) continue; // skip blank rows
+
+    const lname = String(row[colIdx.lname] ?? '').trim();
+    const fname = String(row[colIdx.fname] ?? '').trim();
+    const login = String(row[colIdx.login] ?? '').trim().toLowerCase().replace(/\s+/g,'');
+    const pass  = String(row[colIdx.pass]  ?? '').trim();
+    const extra = String(row[colIdx.extra] ?? '').trim();
+
+    // Validation
+    const rowErrs = [];
+    if (!lname) rowErrs.push('Familiya bo\'sh');
+    if (!fname) rowErrs.push('Ism bo\'sh');
+    if (!login) rowErrs.push('Login bo\'sh');
+    if (!pass || pass.length < 4) rowErrs.push('Parol kamida 4 belgi');
+    if (seenLogins.has(login)) rowErrs.push('Login faylda takrorlangan');
+
+    if (rowErrs.length) {
+      impErrors.push({ row: i+1, data: [lname,fname,login,pass,extra], errors: rowErrs });
+      continue;
+    }
+
+    seenLogins.add(login);
+
+    // Resolve groupId for student
+    let groupId = defaultGroupId;
+    let subject = '';
+    if (role === 'student' && extra) {
+      const g = db.groups.find(g => g.name.toLowerCase() === extra.toLowerCase());
+      if (g) groupId = g.id;
+    }
+    if (role === 'teacher') subject = extra;
+
+    // Check duplicate login in DB
+    const existing = db.users.find(u => u.login === login);
+    if (existing) impDups.push(login);
+
+    impParsed.push({ lname, fname, login, pass, role, groupId, subject, existing: existing?.id || null });
+  }
+
+  renderImportPreview(fileName);
+}
+
+function findCol(header, aliases) {
+  for (let a of aliases) {
+    const i = header.findIndex(h => h.includes(a));
+    if (i >= 0) return i;
+  }
+  return -1;
+}
+
+// ---- Render preview ----
+function renderImportPreview(fileName) {
+  // Update upload zone
+  document.getElementById('impZone').className = 'uzone chosen';
+  document.getElementById('impZoneIco').className = 'ti ti-file-check';
+  document.getElementById('impZoneTxt').textContent = fileName;
+
+  document.getElementById('impStep1').style.display = 'none';
+  document.getElementById('impStep2').style.display = 'block';
+
+  const role = document.getElementById('impRole').value;
+  const isT = role === 'teacher';
+
+  // Summary bar
+  const total = impParsed.length + impErrors.length;
+  document.getElementById('impSummaryBar').innerHTML = `
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;font-size:13px">
+      <span><strong>${total}</strong> qator o'qildi</span>
+      <span style="color:var(--green)"><i class="ti ti-check"></i> <strong>${impParsed.length}</strong> tayyor</span>
+      ${impErrors.length ? `<span style="color:var(--red)"><i class="ti ti-x"></i> <strong>${impErrors.length}</strong> xato (tashlab ketiladi)</span>` : ''}
+      ${impDups.length ? `<span style="color:var(--amber)"><i class="ti ti-refresh"></i> <strong>${impDups.length}</strong> yangilanadi</span>` : ''}
+    </div>
+  `;
+
+  // Errors
+  const errBlock = document.getElementById('impErrorBlock');
+  if (impErrors.length) {
+    errBlock.style.display = 'block';
+    document.getElementById('impErrorList').innerHTML = impErrors.map(e =>
+      `<div style="padding:2px 0;border-bottom:1px solid var(--border)">Qator ${e.row}: ${e.data.slice(0,3).join(' | ')} — <span style="color:var(--red)">${e.errors.join('; ')}</span></div>`
+    ).join('');
+  } else errBlock.style.display = 'none';
+
+  // Dups
+  const dupBlock = document.getElementById('impDupBlock');
+  if (impDups.length) {
+    dupBlock.style.display = 'block';
+    document.getElementById('impDupList').innerHTML = impDups.map(l => `<span style="margin-right:8px">${l}</span>`).join('');
+  } else dupBlock.style.display = 'none';
+
+  // Preview table
+  const roleColors = { teacher:'blue', student:'green', admin:'red' };
+  const thead = document.getElementById('impThead');
+  const tbody = document.getElementById('impTbody');
+
+  thead.innerHTML = `<tr style="background:var(--s2)">
+    <th style="padding:7px 10px;font-size:11px;font-weight:600;color:var(--t2);border-bottom:1px solid var(--border)">#</th>
+    <th style="padding:7px 10px;font-size:11px;font-weight:600;color:var(--t2);border-bottom:1px solid var(--border)">F.I.Sh</th>
+    <th style="padding:7px 10px;font-size:11px;font-weight:600;color:var(--t2);border-bottom:1px solid var(--border)">Login</th>
+    <th style="padding:7px 10px;font-size:11px;font-weight:600;color:var(--t2);border-bottom:1px solid var(--border)">Parol</th>
+    <th style="padding:7px 10px;font-size:11px;font-weight:600;color:var(--t2);border-bottom:1px solid var(--border)">${isT ? 'Fan' : 'Guruh'}</th>
+    <th style="padding:7px 10px;font-size:11px;font-weight:600;color:var(--t2);border-bottom:1px solid var(--border)">Holat</th>
+  </tr>`;
+
+  if (!impParsed.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--t3)">Saqlash uchun ma'lumot yo'q</td></tr>`;
+  } else {
+    tbody.innerHTML = impParsed.map((r, i) => {
+      const grp = r.groupId ? db.groups.find(g => g.id === r.groupId) : null;
+      const isDup = !!r.existing;
+      const bg = isDup ? 'background:var(--abg)' : (i%2===0 ? '' : 'background:var(--s2)');
+      return `<tr style="${bg}">
+        <td style="padding:6px 10px;font-size:12px;color:var(--t3);border-bottom:1px solid var(--border)">${i+1}</td>
+        <td style="padding:6px 10px;font-size:13px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:7px">
+            ${ava(r.fname+' '+r.lname, roleColors[r.role]||'blue')}
+            <span>${r.lname} ${r.fname}</span>
+          </div>
+        </td>
+        <td style="padding:6px 10px;font-size:12px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">${r.login}</td>
+        <td style="padding:6px 10px;font-size:12px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">${r.pass}</td>
+        <td style="padding:6px 10px;font-size:12px;border-bottom:1px solid var(--border)">${isT ? (r.subject||'—') : (grp ? grp.name : (r.groupId||'—'))}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid var(--border)">
+          ${isDup
+            ? '<span class="pill pending" style="font-size:10px">Yangilanadi</span>'
+            : '<span class="pill active" style="font-size:10px">Yangi</span>'}
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  document.getElementById('impReadyCount').textContent = `${impParsed.length} ta foydalanuvchi saqlanadi`;
+  document.getElementById('impSaveBtn').disabled = impParsed.length === 0;
+}
+
+// ---- Save imported users ----
+function importUsers() {
+  if (!impParsed.length) { toast('Saqlanadigan ma\'lumot yo\'q', 'err'); return; }
+
+  let added = 0, updated = 0;
+  impParsed.forEach(r => {
+    if (r.existing) {
+      // Update existing
+      const u = db.users.find(x => x.id === r.existing);
+      if (u) {
+        u.fname = r.lname; // note: we store as fname=lname, lname=fname per template col order
+        u.lname = r.fname;
+        u.pass  = r.pass;
+        if (r.groupId) u.groupId = r.groupId;
+        if (r.subject) u.subject = r.subject;
+        updated++;
+      }
+// ---- Save imported users via API ----
+async function importUsers() {
+  if (!impParsed.length) { toast('Saqlanadigan ma\'lumot yo\'q', 'err'); return; }
+  showLoading();
+  try {
+    const users = impParsed.map(r => ({
+      fname: r.lname,  // Familiya
+      lname: r.fname,  // Ism
+      login: r.login,
+      password: r.pass,
+      role: r.role,
+      subject: r.subject || '',
+      group_id: r.groupId || null,
+    }));
+    const res = await POST('/users/bulk', { users });
+    closeM('importModal');
+    toast(`${res.added} ta qo'shildi, ${res.updated} ta yangilandi!`);
+    await startAdmin();
+  } catch(e) {
+    toast(e.message, 'err');
+  } finally { hideLoading(); }
+}
+
+// ---- Reset to step 1 ----
+function resetImport() {
+  impParsed = []; impErrors = []; impDups = [];
+  document.getElementById('impStep1').style.display = 'block';
+  document.getElementById('impStep2').style.display = 'none';
+  document.getElementById('impZone').className = 'uzone';
+  document.getElementById('impZoneIco').className = 'ti ti-file-spreadsheet';
+  document.getElementById('impZoneTxt').textContent = 'Excel faylni shu yerga torting yoki bosing';
+  document.getElementById('impFileIn').value = '';
+}
+
+// ---- saveGroup via API ----
+async function saveGroup(){
+  const name=document.getElementById('gName').value.trim();
+  if(!name){toast('Guruh nomini kiriting','err');return;}
+  const teacherId=document.getElementById('gTeacher').value||null;
+  const dept=document.getElementById('gDept').value.trim();
+  showLoading();
+  try {
+    const group = await POST('/groups/', {name, dept, teacher_id:teacherId});
+    // assign students
+    const studentIds=[];
+    document.querySelectorAll('#gStudentsList input:checked').forEach(cb=>studentIds.push(cb.value));
+    if(studentIds.length || teacherId) {
+      await PATCH('/groups/'+group.id, {student_ids:studentIds, teacher_id:teacherId});
+    }
+    closeM('addGroupModal'); toast('Guruh yaratildi!');
+    await startAdmin();
+  } catch(e){ toast(e.message,'err'); }
+  finally { hideLoading(); }
+}
+
+async function saveGroupManage(){
+  const g=db.groups.find(x=>x.id===manageGroupId); if(!g) return;
+  const tid=document.getElementById('mgTeacher').value||null;
+  const studentIds=[];
+  document.querySelectorAll('#mgStudentsList input:checked').forEach(cb=>studentIds.push(cb.value));
+  showLoading();
+  try {
+    await PATCH('/groups/'+manageGroupId, {teacher_id:tid, student_ids:studentIds});
+    closeM('manageGroupModal'); toast('Guruh yangilandi!');
+    await startAdmin();
+  } catch(e){ toast(e.message,'err'); }
+  finally { hideLoading(); }
+}
+
+async function delGroup(gid_){
+  if(!confirm('Guruhni o\'chirishni tasdiqlaysizmi?'))return;
+  showLoading();
+  try {
+    await DEL('/groups/'+gid_);
+    toast("O'chirildi");
+    await startAdmin();
+  } catch(e){ toast(e.message,'err'); }
+  finally { hideLoading(); }
+}
+</script>
+</body>
+</html>
