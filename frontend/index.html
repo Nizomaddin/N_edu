@@ -723,8 +723,11 @@ tbody tr:hover td{background:var(--s2)}
 // API CONFIG
 // ============================================================
 const API_BASE = 'https://nedu-beta.vercel.app/api';
-let me = null;
-let _token = localStorage.getItem('edu_token') || null;
+var me = null;
+var _token = localStorage.getItem('edu_token') || null;
+
+// Global db - API dan olingan ma'lumotlar saqlanadi
+var db = { users:[], groups:[], assignments:[], submissions:[] };
 
 // ---- HTTP helpers ----
 async function api(method, path, body=null, isForm=false){
@@ -1460,9 +1463,6 @@ function prevFile(subId){
   else body.innerHTML=`<div style="text-align:center;padding:2.5rem"><i class="ti ti-file-download" style="font-size:48px;display:block;margin-bottom:14px;color:var(--blue)"></i><p style="font-weight:500;margin-bottom:6px">${s.fileName||'Fayl'}</p><button class="btn btn-primary" onclick="dlFile('${subId}')"><i class="ti ti-download"></i>Yuklab olish</button></div>`;
   openM('prevModal');
 }
-  const ext=(s.fileName||'').split('.').pop().toLowerCase();
-  const imgs=['png','jpg','jpeg','gif','webp','svg','bmp'];
-  const body=document.getElementById('prevBody');
 
 // ============================================================
 // STUDENT
@@ -1634,7 +1634,6 @@ async function doSubmit(){
 // ============================================================
 // INIT
 // ============================================================
-let db = { users:[], groups:[], assignments:[], submissions:[] };
 tryAutoLogin();
 </script>
 
@@ -1910,22 +1909,6 @@ function renderImportPreview(fileName) {
 }
 
 // ---- Save imported users ----
-function importUsers() {
-  if (!impParsed.length) { toast('Saqlanadigan ma\'lumot yo\'q', 'err'); return; }
-
-  let added = 0, updated = 0;
-  impParsed.forEach(r => {
-    if (r.existing) {
-      // Update existing
-      const u = db.users.find(x => x.id === r.existing);
-      if (u) {
-        u.fname = r.lname; // note: we store as fname=lname, lname=fname per template col order
-        u.lname = r.fname;
-        u.pass  = r.pass;
-        if (r.groupId) u.groupId = r.groupId;
-        if (r.subject) u.subject = r.subject;
-        updated++;
-      }
 // ---- Save imported users via API ----
 async function importUsers() {
   if (!impParsed.length) { toast('Saqlanadigan ma\'lumot yo\'q', 'err'); return; }
