@@ -17,16 +17,28 @@ SUPABASE_KEY   = os.getenv("SUPABASE_SERVICE_KEY","")
 BUCKET         = "assignments"
 
 async def upload_file(file: UploadFile, folder: str):
-    if not SUPABASE_URL or not SUPABASE_KEY: return None, None
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        import sys
+        print(f"UPLOAD ERROR: SUPABASE_URL={bool(SUPABASE_URL)}, KEY={bool(SUPABASE_KEY)}", file=sys.stderr)
+        return None, None
     ext = file.filename.rsplit(".",1)[-1] if "." in file.filename else "bin"
     path = f"{folder}/{uuid.uuid4().hex}.{ext}"
     content = await file.read()
     url = f"{SUPABASE_URL}/storage/v1/object/{BUCKET}/{path}"
-    headers = {"Authorization": f"Bearer {SUPABASE_KEY}", "Content-Type": file.content_type or "application/octet-stream"}
-    async with httpx.AsyncClient() as client:
+    headers = {
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": file.content_type or "application/octet-stream",
+        "x-upsert": "true",
+    }
+    import sys
+    print(f"UPLOADING to: {url[:60]}, size: {len(content)}", file=sys.stderr)
+    async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(url, content=content, headers=headers)
-    if resp.status_code not in (200,201): return file.filename, None
-    return file.filename, f"{SUPABASE_URL}/storage/v1/object/public/{BUCKET}/{path}"
+    print(f"UPLOAD RESPONSE: {resp.status_code} {resp.text[:100]}", file=sys.stderr)
+    if resp.status_code >= 400:
+        return file.filename, None
+    public_url = f"{SUPABASE_URL}/storage/v1/object/public/{BUCKET}/{path}"
+    return file.filename, public_url
 
 def assign_out(a, teacher=None, submitted_count=None, student_count=None):
     d = dict(a)
