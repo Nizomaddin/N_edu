@@ -1356,8 +1356,9 @@ function renderTGrades(){
 
 // -- New Assign --
 let aFileData=null;
+let aFileObj=null;
 function openNewAssignModal(){
-  aFileData=null;
+  aFileData=null; aFileObj=null;
   ['aTit','aSub','aDesc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('aMax').value='100';
   document.getElementById('aDue').value='';
@@ -1372,7 +1373,11 @@ function openNewAssignModal(){
 }
 function handleAFile(inp){
   const f=inp.files[0]; if(!f) return;
-  const r=new FileReader(); r.onload=e=>{aFileData={name:f.name,data:e.target.result};document.getElementById('aFTxt').textContent=f.name;document.getElementById('aFZone').className='uzone chosen';document.getElementById('aFIco').className='ti ti-file-check';};r.readAsDataURL(f);
+  aFileObj=f;
+  aFileData={name:f.name};
+  document.getElementById('aFTxt').textContent=f.name;
+  document.getElementById('aFZone').className='uzone chosen';
+  document.getElementById('aFIco').className='ti ti-file-check';
 }
 async function saveAssign(){
   const title=document.getElementById('aTit').value.trim();
@@ -1390,11 +1395,8 @@ async function saveAssign(){
     form.append('max_score', document.getElementById('aMax').value||100);
     form.append('due_date', due);
     form.append('group_id', gid_);
-    if(aFileData) {
-      // base64 ni File ga o'tkazish
-      const resp = await fetch(aFileData.data);
-      const blob = await resp.blob();
-      form.append('file', blob, aFileData.name);
+    if(aFileObj) {
+      form.append('file', aFileObj, aFileObj.name);
     }
     await POSTF('/assignments/', form);
     closeM('newAssignModal');
